@@ -24,7 +24,6 @@ public class JavascriptInterpreter implements Interpreter {
 	/*
 	 * Attribute Section
 	 */
-
 	/** Reference to the Java Applet containing the AliceBot. */
 	private final Applet applet;
 
