@@ -34,8 +34,7 @@ public class SubstitutionTest extends TestCase {
 	try {
 	    tokenizer = TokenizerMother.newInstance();
 	} catch (Exception e) {
-	    // this is probably not the 'correct' way
-	    throw new RuntimeException();
+	    fail(e.getMessage());
 	}
     }
 
