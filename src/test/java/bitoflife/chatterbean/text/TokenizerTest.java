@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,49 +10,47 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.text;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
-public class TokenizerTest extends TestCase
-{
-  /*
-  Attribute Section
-  */
+public class TokenizerTest extends TestCase {
+	/*
+	 * Attribute Section
+	 */
 
-  private Tokenizer tokenizer;
+	private Tokenizer fixture;
 
-  /*
-  Event Section
-  */
+	/*
+	 * Event Section
+	 */
 
-  protected void setUp() throws Exception
-  {
-    tokenizer = TokenizerMother.newInstance();
-  }
+	protected void setUp() throws Exception {
+		fixture = TokenizerMother.newInstance();
+	}
 
-  protected void tearDown()
-  {
-    tokenizer = null;
-  }
+	protected void tearDown() {
+		fixture = null;
+	}
 
-  /*
-  Test Section
-  */
+	@Test
+	public void testCreation() {
+		assertNotNull(fixture);
+	}
 
-  public void testTokenize()
-  {
-    String input = " You shut your mouth,how   can you say I go about things the wrong way?  ";
-    List<String> expected = Arrays.asList(
-      new String[] {"You", "shut", "your", "mouth", ",", "how", "can", "you", "say",
-                    "I", "go", "about", "things", "the", "wrong", "way", "?"});
-    List<String> actual = tokenizer.tokenize(input);
-
-    assertEquals(expected, actual);
-  }
+	public void testTokenizing() {
+		String input = " You shut your mouth,how   can you say I go about things the wrong way?  ";
+		List<String> expected = Arrays.asList(new String[] { "You", "shut",
+				"your", "mouth", ",", "how", "can", "you", "say", "I", "go",
+				"about", "things", "the", "wrong", "way", "?" });
+		List<String> actual = fixture.tokenize(input);
+		assertEquals(expected, actual);
+	}
 }

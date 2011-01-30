@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,7 +10,7 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.config;
 
@@ -24,94 +24,78 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import bitoflife.chatterbean.text.Tokenizer;
 
-public class TokenizerConfigStream extends DefaultHandler implements TokenizerConfig
-{
-  /*
-  Attribute Section
-  */
-  
-  private static final String[] STRING_ARRAY = new String[0];
+public class TokenizerConfigStream extends DefaultHandler implements
+		TokenizerConfig {
+	/*
+	 * Attribute Section
+	 */
 
-  private final SAXParser parser;
+	private static final String[] STRING_ARRAY = new String[0];
 
-  private final List<String> splitters = new ArrayList<String>(6);
-  
-  private boolean ignoreWhitespace;
+	private final SAXParser parser;
 
-  /*
-  Constructor Section
-  */
-  
-  public TokenizerConfigStream() throws ConfigException
-  {
-    try
-    {
-      SAXParserFactory factory = SAXParserFactory.newInstance();
-      parser = factory.newSAXParser();
-    }
-    catch (Exception e)
-    {
-      throw new ConfigException(e);
-    }
-  }
+	private final List<String> splitters = new ArrayList<String>(6);
 
-  public TokenizerConfigStream(InputStream input) throws ConfigException
-  {
-    try
-    {
-      SAXParserFactory factory = SAXParserFactory.newInstance();
-      parser = factory.newSAXParser();
-      parse(input);
-    }
-    catch (ConfigException e)
-    {
-      throw e;
-    }
-    catch (Exception e)
-    {
-      throw new ConfigException(e);
-    }
-  }
+	private boolean ignoreWhitespace;
 
-  /*
-  Event Section
-  */
+	/*
+	 * Constructor Section
+	 */
 
-  public void startElement(String namespace, String name, String qname, Attributes attributes) throws SAXException
-  {
-    if ("splitter".equals(qname))
-      splitters.add(attributes.getValue(0));
-  }
+	public TokenizerConfigStream() throws ConfigException {
+		try {
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			parser = factory.newSAXParser();
+		} catch (Exception e) {
+			throw new ConfigException(e);
+		}
+	}
 
-  /*
-  Method Section
-  */
-  
-  public Tokenizer newInstance()
-  {
-    return new Tokenizer(splitters());
-  }
-  
-  public void parse(InputStream input) throws ConfigException
-  {
-    try
-    {
-      splitters.clear();
-      ignoreWhitespace = true;
-      parser.parse(input, this);
-    }
-    catch (Exception e)
-    {
-      throw new ConfigException(e);
-    }
-  }
+	public TokenizerConfigStream(InputStream input) throws ConfigException {
+		try {
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			parser = factory.newSAXParser();
+			parse(input);
+		} catch (ConfigException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new ConfigException(e);
+		}
+	}
 
-  /*
-  Accessor Section
-  */
-  
-  public String[] splitters()
-  {
-    return splitters.toArray(STRING_ARRAY);
-  }
+	/*
+	 * Event Section
+	 */
+
+	public void startElement(String namespace, String name, String qname,
+			Attributes attributes) throws SAXException {
+		if ("splitter".equals(qname))
+			splitters.add(attributes.getValue(0));
+	}
+
+	/*
+	 * Method Section
+	 */
+
+	public Tokenizer newInstance() {
+		return new Tokenizer(splitters());
+	}
+
+	public void parse(InputStream input) throws ConfigException {
+		try {
+			splitters.clear();
+			ignoreWhitespace = true;
+			parser.parse(input, this);
+		} catch (Exception e) {
+			throw new ConfigException(e);
+		}
+	}
+
+	/*
+	 * Accessor Section
+	 */
+
+	public String[] splitters() {
+		return splitters.toArray(STRING_ARRAY);
+	}
 }
