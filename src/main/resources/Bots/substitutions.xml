@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--Substitutions are grouped according to several AIML interpreter functions.-->
 <substitutions>
   <!-- Input substitutions correct spelling mistakes and convert "sentence"-ending characters into characters that will not be identified as sentence enders. -->
@@ -188,18 +188,18 @@
       <substitute find=" we re " replace=" we are "/>
       <substitute find=" she s " replace=" she is "/>
       <substitute find=" he s " replace=" he is "/>
-      <substitute find="ç" replace="c"/>
-      <substitute find="á" replace="a"/>
-      <substitute find="é" replace="e"/>
-      <substitute find="í" replace="i"/>
-      <substitute find="ó" replace="o"/>
-      <substitute find="ú" replace="u"/>
-      <substitute find="â" replace="a"/>
-      <substitute find="ê" replace="e"/>
-      <substitute find="ô" replace="o"/>
-      <substitute find="ã" replace="a"/>
-      <substitute find="õ" replace="o"/>
-      <substitute find="ü" replace="u"/>
+      <substitute find="Ã§" replace="c"/>
+      <substitute find="Ã¡" replace="a"/>
+      <substitute find="Ã©" replace="e"/>
+      <substitute find="Ã­" replace="i"/>
+      <substitute find="Ã³" replace="o"/>
+      <substitute find="Ãº" replace="u"/>
+      <substitute find="Ã¢" replace="a"/>
+      <substitute find="Ãª" replace="e"/>
+      <substitute find="Ã´" replace="o"/>
+      <substitute find="Ã£" replace="a"/>
+      <substitute find="Ãµ" replace="o"/>
+      <substitute find="Ã¼" replace="u"/>
       <substitute find="`" replace=" "/>
     </correction>
     <protection><!-- sentence protection -->
