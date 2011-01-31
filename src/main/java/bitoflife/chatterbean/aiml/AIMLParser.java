@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,59 +10,52 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.aiml;
 
 import java.io.InputStream;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import bitoflife.chatterbean.Graphmaster;
 import bitoflife.chatterbean.util.Searcher;
 
-public class AIMLParser
-{
-  /*
-  Attributes
-  */
+public class AIMLParser {
+    /*
+     * Attributes
+     */
 
-  private final Searcher searcher = new Searcher();
-  private final AIMLHandler handler = new AIMLHandler();
-  private SAXParser parser;
+    private final Searcher searcher = new Searcher();
+    private final AIMLHandler handler = new AIMLHandler();
+    private SAXParser parser;
 
-  /*
-  Constructor
-  */
+    /*
+     * Constructor
+     */
 
-  public AIMLParser() throws AIMLParserConfigurationException
-  {
-    try
-    {
-      parser = SAXParserFactory.newInstance().newSAXParser();
+    public AIMLParser() throws AIMLParserConfigurationException {
+	try {
+	    parser = SAXParserFactory.newInstance().newSAXParser();
+	} catch (Exception e) {
+	    throw new AIMLParserConfigurationException(e);
+	}
     }
-    catch (Exception e)
-    {
-      throw new AIMLParserConfigurationException(e);
-    }
-  }
 
-  /*
-  Methods
-  */
+    /*
+     * Methods
+     */
 
-  public void parse(Graphmaster graphmaster, InputStream... sources) throws AIMLParserException
-  {
-    try
-    {
-      for (InputStream aiml : sources)
-        parser.parse(aiml, handler);
+    public void parse(Graphmaster graphmaster, InputStream... sources)
+	    throws AIMLParserException {
+	try {
+	    for (InputStream aiml : sources)
+		parser.parse(aiml, handler);
 
-      graphmaster.append(handler.unload());
+	    graphmaster.append(handler.unload());
+	} catch (Exception e) {
+	    throw new AIMLParserException(e);
+	}
     }
-    catch (Exception e)
-    {
-      throw new AIMLParserException(e);
-    }
-  }
 }

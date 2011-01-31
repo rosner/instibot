@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,31 +10,28 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean;
 
-import bitoflife.chatterbean.Graphmaster;
-import bitoflife.chatterbean.aiml.Srai;
-import bitoflife.chatterbean.aiml.Star;
-import bitoflife.chatterbean.aiml.Text;
 import bitoflife.chatterbean.aiml.Category;
+import bitoflife.chatterbean.aiml.Star;
 
-public class GraphmasterMother
-{
-  /*
-  Methods
-  */
+public class GraphmasterMother {
+    /*
+     * Methods
+     */
 
-  public Graphmaster newInstance()
-  {
-    Graphmaster root = new Graphmaster();
+    public Graphmaster newInstance() {
+	Graphmaster root = new Graphmaster();
 
-    root.append(new Category(" SAY _ AGAIN ", "What, again? \"", new Star(1), "\"."));
-    root.append(new Category(" SAY IT NOW ", "Whatever you want..."));
-    root.append(new Category(" SAY * ", new Star(1), "!"));
-    root.append(new Category(" DO YOU SEE THE * IN MY EYES ", "Yes, I see the ", new Star(1), " in your eyes."));
+	root.append(new Category(" SAY _ AGAIN ", "What, again? \"",
+		new Star(1), "\"."));
+	root.append(new Category(" SAY IT NOW ", "Whatever you want..."));
+	root.append(new Category(" SAY * ", new Star(1), "!"));
+	root.append(new Category(" DO YOU SEE THE * IN MY EYES ",
+		"Yes, I see the ", new Star(1), " in your eyes."));
 
-    return root;
-  }
+	return root;
+    }
 }

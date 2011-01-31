@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,52 +10,36 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.aiml;
 
 import bitoflife.chatterbean.Match;
 
-public class Text extends TemplateElement
-{
-  /*
-  Attributes
-  */
+public class Text extends TemplateElement {
 
-  private final String value;
-  
-  /*
-  Constructor
-  */
+    private final String value;
 
-  public Text(String value)
-  {
-    this.value = value;
-  }
-  
-  /*
-  Methods
-  */
+    public Text(String value) {
+	this.value = value;
+    }
 
-  public boolean equals(Object obj)
-  {
-    if (obj == null) return false;
-    String text = obj.toString();
-    return (text != null ? text.equals(value) : value == null);
-  }
+    public boolean equals(Object obj) {
+	if (obj == null)
+	    return false;
+	String text = obj.toString();
+	return (text != null ? text.equals(value) : value == null);
+    }
 
-  public int hashCode()
-  {
-    return (value == null ? 0 : value.hashCode());
-  }
+    public int hashCode() {
+	return (value == null ? 0 : value.hashCode());
+    }
 
-  public String toString()
-  {
-    return value;
-  }
+    public String toString() {
+	return value;
+    }
 
-  public String process(Match match)
-  {
-    return value;
-  }
+    public String process(Match match) {
+	return value;
+    }
 }

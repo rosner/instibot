@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,7 +10,7 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.aiml;
 
@@ -19,52 +19,35 @@ import bitoflife.chatterbean.Match;
 
 import static bitoflife.chatterbean.Match.Section.TOPIC;
 
-public class Topicstar extends TemplateElement
-{
-  /*
-  Attributes
-  */
-  
-  private int index;
+public class Topicstar extends TemplateElement {
+    private int index;
 
-  /*
-  Constructor
-  */
-  
-  public Topicstar(Attributes attributes)
-  {
-    String value = attributes.getValue(0);
-    if (value == null)
-      index = 1;
-    else
-      index = Integer.parseInt(value);
-  }
-  
-  public Topicstar(int index)
-  {
-    this.index = index;
-  }
-  
-  /*
-  Methods
-  */
-  
-  public boolean equals(Object obj)
-  {
-    if (!super.equals(obj)) return false;
-    Topicstar compared = (Topicstar) obj;
-    
-    return (index == compared.index);
-  }
-  
-  public String toString()
-  {
-    return "<topicstar index=\"" + index + "\">";
-  }
-  
-  public String process(Match match)
-  {
-    String wildcard = match.wildcard(TOPIC, index);
-    return (wildcard != null ? wildcard.trim() : "");
-  }
+    public Topicstar(Attributes attributes) {
+	String value = attributes.getValue(0);
+	if (value == null)
+	    index = 1;
+	else
+	    index = Integer.parseInt(value);
+    }
+
+    public Topicstar(int index) {
+	this.index = index;
+    }
+
+    public boolean equals(Object obj) {
+	if (!super.equals(obj))
+	    return false;
+	Topicstar compared = (Topicstar) obj;
+
+	return (index == compared.index);
+    }
+
+    public String toString() {
+	return "<topicstar index=\"" + index + "\">";
+    }
+
+    public String process(Match match) {
+	String wildcard = match.wildcard(TOPIC, index);
+	return (wildcard != null ? wildcard.trim() : "");
+    }
 }

@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,7 +10,7 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.aiml;
 
@@ -20,30 +20,19 @@ import bitoflife.chatterbean.AliceBot;
 import bitoflife.chatterbean.Match;
 import bitoflife.chatterbean.text.Transformations;
 
-public class Gender extends TemplateElement
-{
-  /*
-  Constructor Section
-  */
+public class Gender extends TemplateElement {
 
-  public Gender(Attributes attributes)
-  {
-  }
+    public Gender(Attributes attributes) {
+    }
 
-  public Gender(Object... children)
-  {
-    super(children);
-  }
-  
-  /*
-  Method Section
-  */
-  
-  public String process(Match match)
-  {
-    String input = super.process(match);
-    AliceBot bot = match.getCallback();
-    Transformations transformations = bot.transformations();
-    return transformations.gender(input);
-  }
+    public Gender(Object... children) {
+	super(children);
+    }
+
+    public String process(Match match) {
+	String input = super.process(match);
+	AliceBot bot = match.getCallback();
+	Transformations transformations = bot.transformations();
+	return transformations.gender(input);
+    }
 }

@@ -1,5 +1,5 @@
 /*
-Copyleft (C) 2005 Hélio Perroni Filho
+Copyleft (C) 2005 Hï¿½lio Perroni Filho
 xperroni@yahoo.com
 ICQ: 2490863
 
@@ -10,59 +10,49 @@ ChatterBean is free software; you can redistribute it and/or modify it under the
 ChatterBean is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with ChatterBean (look at the Documents/ directory); if not, either write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA, or visit (http://www.gnu.org/licenses/gpl.txt).
-*/
+ */
 
 package bitoflife.chatterbean.aiml;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
-import java.net.URLConnection;
+
 import org.xml.sax.Attributes;
 
 import bitoflife.chatterbean.AliceBot;
-import bitoflife.chatterbean.Context;
-import bitoflife.chatterbean.Match;
 import bitoflife.chatterbean.Graphmaster;
+import bitoflife.chatterbean.Match;
 
-public class Learn extends TemplateElement
-{
-  /*
-  Constructors
-  */
+public class Learn extends TemplateElement {
+    /*
+     * Constructors
+     */
 
-  public Learn(Attributes attributes)
-  {
-  }
-
-  public Learn(Object... children)
-  {
-    super(children);
-  }
-
-  /*
-  Methods
-  */
-
-  public String process(Match match)
-  {
-    AliceBot bot = null;
-    try
-    {
-      bot = match.getCallback();
-      Graphmaster graphmaster = bot.getGraphmaster();
-
-      String address = super.process(match);
-      URL url = new URL(address);
-
-      AIMLParser parser = new AIMLParser();
-      parser.parse(graphmaster, url.openStream());
-    }
-    catch (Exception e)
-    {
-      throw new RuntimeException(e);
+    public Learn(Attributes attributes) {
     }
 
-    return "";
-  }
+    public Learn(Object... children) {
+	super(children);
+    }
+
+    /*
+     * Methods
+     */
+
+    public String process(Match match) {
+	AliceBot bot = null;
+	try {
+	    bot = match.getCallback();
+	    Graphmaster graphmaster = bot.getGraphmaster();
+
+	    String address = super.process(match);
+	    URL url = new URL(address);
+
+	    AIMLParser parser = new AIMLParser();
+	    parser.parse(graphmaster, url.openStream());
+	} catch (Exception e) {
+	    throw new RuntimeException(e);
+	}
+
+	return "";
+    }
 }

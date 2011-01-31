@@ -21,13 +21,15 @@ import bitoflife.chatterbean.config.TokenizerConfig;
 import bitoflife.chatterbean.config.TokenizerConfigStream;
 
 public class TokenizerMother {
-	private static final String SPLITTERS_TEXT_FILE = "splitters.xml";
+    private static final String SPLITTERS_TEXT_FILE = "splitters.xml";
 
-	public static Tokenizer newInstance() throws Exception {
-		
-		InputStream tokenizerConfigFileInputStream = AliceBot.class.getResourceAsStream(SPLITTERS_TEXT_FILE);
-		
-		TokenizerConfig config = new TokenizerConfigStream(tokenizerConfigFileInputStream);
-		return new Tokenizer(config);
-	}
+    public static Tokenizer newInstance() throws Exception {
+
+	InputStream tokenizerConfigFileInputStream = AliceBot.class
+		.getResourceAsStream(SPLITTERS_TEXT_FILE);
+
+	TokenizerConfig config = new TokenizerConfigStream(
+		tokenizerConfigFileInputStream);
+	return new Tokenizer(config);
+    }
 }

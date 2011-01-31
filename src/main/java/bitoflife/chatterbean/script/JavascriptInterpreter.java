@@ -21,62 +21,62 @@ import netscape.javascript.JSObject;
  * Interpreter for Javascript scripts.
  */
 public class JavascriptInterpreter implements Interpreter {
-	/*
-	 * Attribute Section
-	 */
-	/** Reference to the Java Applet containing the AliceBot. */
-	private final Applet applet;
+    /*
+     * Attribute Section
+     */
+    /** Reference to the Java Applet containing the AliceBot. */
+    private final Applet applet;
 
-	/*
-	 * Constructor Section
-	 */
+    /*
+     * Constructor Section
+     */
 
-	/**
-	 * Creates a new Javascript interpreter.
-	 * 
-	 * @param window
-	 *            Reference to the Java Applet containing the AliceBot.
-	 */
-	public JavascriptInterpreter(Applet applet) {
-		this.applet = applet;
+    /**
+     * Creates a new Javascript interpreter.
+     * 
+     * @param window
+     *            Reference to the Java Applet containing the AliceBot.
+     */
+    public JavascriptInterpreter(Applet applet) {
+	this.applet = applet;
+    }
+
+    /*
+     * Method Section
+     */
+
+    /**
+     * Returns a reference to the callback object for the Javascript
+     * environment.
+     * 
+     * @return Callback object for the Javascript environment.
+     */
+    private JSObject window() {
+	return JSObject.getWindow(applet);
+    }
+
+    public Object evaluate(String script) throws InterpretingException {
+	try {
+	    return window().eval(script);
+	} catch (Exception e) {
+	    throw new InterpretingException(e);
 	}
+    }
 
-	/*
-	 * Method Section
-	 */
-
-	/**
-	 * Returns a reference to the callback object for the Javascript
-	 * environment.
-	 * 
-	 * @return Callback object for the Javascript environment.
-	 */
-	private JSObject window() {
-		return JSObject.getWindow(applet);
+    public Object variable(String name) throws InterpretingException {
+	try {
+	    return window().getMember(name);
+	} catch (Exception e) {
+	    throw new InterpretingException(e);
 	}
+    }
 
-	public Object evaluate(String script) throws InterpretingException {
-		try {
-			return window().eval(script);
-		} catch (Exception e) {
-			throw new InterpretingException(e);
-		}
+    public void variable(String name, Object value)
+	    throws InterpretingException {
+	try {
+	    window().setMember(name, value);
+	} catch (Exception e) {
+	    throw new InterpretingException(e);
 	}
-
-	public Object variable(String name) throws InterpretingException {
-		try {
-			return window().getMember(name);
-		} catch (Exception e) {
-			throw new InterpretingException(e);
-		}
-	}
-
-	public void variable(String name, Object value)
-			throws InterpretingException {
-		try {
-			window().setMember(name, value);
-		} catch (Exception e) {
-			throw new InterpretingException(e);
-		}
-	}
+    }
 }
