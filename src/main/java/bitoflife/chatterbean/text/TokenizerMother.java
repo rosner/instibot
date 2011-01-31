@@ -16,6 +16,7 @@ package bitoflife.chatterbean.text;
 
 import java.io.InputStream;
 
+import bitoflife.chatterbean.AliceBot;
 import bitoflife.chatterbean.config.TokenizerConfig;
 import bitoflife.chatterbean.config.TokenizerConfigStream;
 
@@ -24,7 +25,7 @@ public class TokenizerMother {
 
 	public static Tokenizer newInstance() throws Exception {
 		
-		InputStream tokenizerConfigFileInputStream = Tokenizer.class.getResourceAsStream(SPLITTERS_TEXT_FILE);
+		InputStream tokenizerConfigFileInputStream = AliceBot.class.getResourceAsStream(SPLITTERS_TEXT_FILE);
 		
 		TokenizerConfig config = new TokenizerConfigStream(tokenizerConfigFileInputStream);
 		return new Tokenizer(config);

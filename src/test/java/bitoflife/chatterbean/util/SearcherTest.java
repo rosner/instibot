@@ -14,36 +14,59 @@ You should have received a copy of the GNU General Public License along with Cha
 
 package bitoflife.chatterbean.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 
 import junit.framework.TestCase;
 
+import org.junit.Before;
+
 public class SearcherTest extends TestCase {
 
-    private Searcher searcher;
+    protected Searcher searcher;
+    
+    protected static final String RESOURCE_PATH = "bitoflife/chatterbean/alice/bots";
 
+    @Before
     protected void setUp() {
 	searcher = new Searcher();
     }
-
-    protected void tearDown() {
-	searcher = null;
-    }
-
-    public void testDirFilesystem() {
-	String[] paths = searcher.dir("Bots/Alice", ".+\\.aiml");
-
-	assertEquals("Bots/Alice/Again.aiml", paths[0]);
-	assertEquals("Bots/Alice/Alice.aiml", paths[1]);
-	assertEquals("Bots/Alice/Astrology.aiml", paths[2]);
-    }
-
-    public void testDirURL() throws Exception {
-	String[] paths = searcher.dir(new URL("file", "localhost", "./"),
-		"Bots/Alice", ".+\\.aiml");
-
-	assertEquals("Bots/Alice/Again.aiml", paths[0]);
-	assertEquals("Bots/Alice/Alice.aiml", paths[1]);
-	assertEquals("Bots/Alice/Astrology.aiml", paths[2]);
-    }
+    
+//    public void testRecursiveResourceSearching() throws IOException {
+//	InputStream[] paths = searcher.search(RESOURCE_PATH);
+//
+//	BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(paths[0]));
+//	String line = null;
+//	StringBuffer stringBuffer = new StringBuffer();
+//	if ((line = bufferedReader.readLine()) != null) {
+//	    
+//	}
+//	assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+//
+//<aiml>
+//  <category>
+//    <pattern>_ ALICE</pattern>
+//    <template><sr/></template>
+//  </category>
+//  <category>
+//    <pattern>_ AGAIN</pattern>
+//    <template>Once more? <sr/></template>
+//  </category>
+//  <category>
+//    <pattern>YOU MAY *</pattern>
+//    <template><sr/></template>
+//  </category>
+//  <category>
+//    <pattern>SAY *</pattern>
+//    <template>&quot;<star/>&quot;.</template>
+//  </category>
+//</aiml>
+//", stringBuffer.toString());
+//	assertEquals("Again.aiml", paths[0]);
+//	assertEquals("Alice.aiml", paths[1]);
+//	assertEquals("Astrology.aiml", paths[2]);
+//    }
 }
