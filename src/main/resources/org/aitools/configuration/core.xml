@@ -153,13 +153,13 @@ GENERAL NOTES
     -->
     
     <!--The location of the AIML schema (or a copy of it). [URL: ../resources/schema/AIML.xsd]-->
-    <entry key="programd.schema-location.AIML">../resources/schema/AIML.xsd</entry>
+    <entry key="programd.schema-location.AIML">../programd/AIML.xsd</entry>
 
     <!--The location of the plugin schema (or a copy of it). [URL: ../resources/schema/plugins.xsd]-->
-    <entry key="programd.schema-location.plugins">../resources/schema/plugins.xsd</entry>
+    <entry key="programd.schema-location.plugins">../programd/plugins.xsd</entry>
 
     <!--The location of the test cases schema (or a copy of it). [URL: ../resources/schema/test-cases.xsd]-->
-    <entry key="programd.schema-location.test-cases">../resources/schema/test-cases.xsd</entry>
+    <entry key="programd.schema-location.test-cases">../programd/test-cases.xsd</entry>
     
             
     <!--

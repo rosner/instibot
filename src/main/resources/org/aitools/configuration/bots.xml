@@ -8,6 +8,7 @@
         <substitutions href="substitutions.xml"/>
         <sentence-splitters href="sentence-splitters.xml"/>
         <listeners href="listeners.xml"/>
+        <learn>*.aiml</learn>
         <!--<learn>../aiml/AAA/*.aiml</learn>
         <learn>../aiml/alice/*.aiml</learn>
         <learn>../aiml/FrenchAIML/*.aiml</learn>
