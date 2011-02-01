@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<aiml>
-  <category>
-    <pattern>DO THE GENDER TEST</pattern>
-    <template><gender>He will do the test for her.</gender></template>
-  </category>
-</aiml>
