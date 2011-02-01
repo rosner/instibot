@@ -131,7 +131,7 @@ GENERAL NOTES
         * The heart can beat and let you know the bot is alive.
         * Right now the only kind of pulse is a message "I'm alive!" printed to the console.
         * You can write a "Pulse" that can do something more useful, like ping a server.-->
-    <entry key="programd.heart.enabled">true</entry>
+    <entry key="programd.heart.enabled">false</entry>
     
     <!--The pulse rate for the heart (beats per minute). [int: 5]-->
     <entry key="programd.heart.pulserate">5</entry>
