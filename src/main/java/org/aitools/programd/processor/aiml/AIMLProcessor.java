@@ -9,44 +9,41 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
-
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.GenericParser;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.Processor;
 import org.aitools.programd.processor.ProcessorException;
 import org.apache.log4j.Logger;
+import org.jdom.Element;
 
 /**
  * An <code>AIMLProcessor</code> is responsible for processing a particular
  * AIML element.
  * 
- * @version 4.5
- * @author Jon Baer
- * @author Thomas Ringate, Pedro Colla
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 abstract public class AIMLProcessor extends Processor
 {
     protected static final Logger logger = Logger.getLogger("programd");
-    
+
     protected static final Logger aimlLogger = Logger.getLogger("programd.aiml-processing");
-    
+
     /**
      * Creates a new AIMLProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use with the new AIMLProcessor
+     * @param core the Core object to use with the new AIMLProcessor
      */
-    public AIMLProcessor(Core coreToUse)
+    public AIMLProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
-     * @see org.aitools.programd.processor.Processor#process(org.w3c.dom.Element,
+     * @see org.aitools.programd.processor.Processor#process(org.jdom.Element,
      *      org.aitools.programd.parser.GenericParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, GenericParser parser) throws ProcessorException
     {

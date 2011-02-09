@@ -18,17 +18,15 @@ import gnu.getopt.LongOpt;
 import org.aitools.programd.Core;
 import org.aitools.programd.CoreShutdownHook;
 import org.aitools.programd.interfaces.Console;
-import org.aitools.programd.util.URLTools;
+import org.aitools.util.resource.URLTools;
 
 /**
- * A <code>SimpleConsole</code> gives you a running
- * {@link org.aitools.programd.Core Core} with a regular
+ * A <code>SimpleConsole</code> gives you a running {@link org.aitools.programd.Core Core} with a regular
  * {@link org.aitools.programd.interfaces.Console Console} and just a basic
- * {@link org.aitools.programd.interfaces.shell.Shell Shell} attached (if you enable
- * it). Input, output and error are routed via standard system objects.
+ * {@link org.aitools.programd.interfaces.shell.Shell Shell} attached (if you enable it). Input, output and error are
+ * routed via standard system objects.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class SimpleConsole
 {
@@ -38,7 +36,7 @@ public class SimpleConsole
     /** The console. */
     private Console console;
 
-    private SimpleConsole(String corePropertiesPath) throws FileNotFoundException
+    protected SimpleConsole(String corePropertiesPath) throws FileNotFoundException
     {
         URL baseURL = URLTools.createValidURL(System.getProperty("user.dir"));
         this.console = new Console();
@@ -56,7 +54,7 @@ public class SimpleConsole
         this.console.startShell();
     }
 
-    private static void usage()
+    protected static void usage()
     {
         System.out.println("Usage: simple-console -c <CORE_CONFIG> -n <CONSOLE_CONFIG>");
         System.out.println("Start up a simple console version of Program D using the specified config files.");
@@ -108,11 +106,14 @@ public class SimpleConsole
         }
         catch (FileNotFoundException e)
         {
-            System.err.println("Core properties file \"" + corePropertiesPath + "\" not found.");
+            System.err.println(String.format("Core properties file \"%s\" not found.", corePropertiesPath));
         }
         // Add a shutdown hook so the Core will be properly shut down if the
         // system exits.
-        Runtime.getRuntime().addShutdownHook(new CoreShutdownHook(console.core));
-        console.run();
+        if (console != null)
+        {
+            Runtime.getRuntime().addShutdownHook(new CoreShutdownHook(console.core));
+            console.run();
+        }
     }
 }

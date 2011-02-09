@@ -10,27 +10,27 @@ import org.aitools.programd.Core;
  */
 public class BotAccess
 {
-    protected Core core;
-    
+    protected Core _core;
+
     protected String botid;
-    
+
     protected String userid;
-    
+
     /**
      * Creates a new <code>Bot</code> with the given
      * core, bot id and user id.
      * 
-     * @param coreToUse
+     * @param core
      * @param bot the id of the bot
      * @param user the id of the user
      */
-    public BotAccess(Core coreToUse, String bot, String user)
+    public BotAccess(Core core, String bot, String user)
     {
-        this.core = coreToUse;
+        this._core = core;
         this.botid = bot;
         this.userid = user;
     }
-    
+
     /**
      * Returns a response to the given input, for the assigned
      * botid and userid.
@@ -40,9 +40,9 @@ public class BotAccess
      */
     public String getResponse(String input)
     {
-        return this.core.getResponse(input, this.userid, this.botid);
+        return this._core.getResponse(input, this.userid, this.botid);
     }
-    
+
     /**
      * @return the botid
      */
@@ -50,12 +50,23 @@ public class BotAccess
     {
         return this.botid;
     }
-    
+
     /**
      * @return the underlying bot object
      */
-    public org.aitools.programd.bot.Bot getBot()
+    public org.aitools.programd.Bot getBot()
     {
-        return this.core.getBot(this.botid);
+        return this._core.getBot(this.botid);
+    }
+    
+    /**
+     * Sets a predicate value.
+     * @param name 
+     * @param value 
+     * @return the result of the set operation (the predicate name or the value, depending on predicate type)
+     */
+    public String set(String name, String value)
+    {
+        return this._core.getPredicateMaster().set(name, value, this.userid, this.botid);
     }
 }

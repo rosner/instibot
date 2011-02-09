@@ -9,19 +9,16 @@
 
 package org.aitools.programd.processor.aiml;
 
-
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-javascript">javascript</a></code>
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-javascript">javascript</a></code>
  * element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  */
@@ -33,32 +30,33 @@ public class JavaScriptProcessor extends AIMLProcessor
     /**
      * Creates a new JavaScriptProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public JavaScriptProcessor(Core coreToUse)
+    public JavaScriptProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
-     * Returns the result of processing the contents of the
-     * <code>javascript</code> element by the JavaScript interpreter.
+     * Returns the result of processing the contents of the <code>javascript</code> element by the JavaScript
+     * interpreter.
      * 
      * @param element the <code>javascript</code> element
      * @param parser the parser that is at work
      * @return the result of processing the element
      * @throws ProcessorException if there is an error in processing
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
         // Don't use the system tag if not permitted.
-        if (!parser.getCore().getSettings().javascriptAllowed())
+        if (!parser.getCore().getSettings().allowJavaScript())
         {
             logger.warn("Use of <javascript> prohibited!");
-            return EMPTY_STRING;
+            return "";
         }
         logger.debug("Calling JavaScript interpreter.");
-        return parser.getCore().getInterpreter().evaluate(parser.evaluate(element.getChildNodes()));
+        return parser.getCore().getInterpreter().evaluate(parser.evaluate(element.getContent()));
     }
 }

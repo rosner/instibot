@@ -9,10 +9,11 @@
 
 package org.aitools.programd.logging;
 
-import org.aitools.programd.util.XMLKit;
+import org.aitools.util.xml.Characters;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
+import org.jdom.Text;
 
 /**
  * A ChatLogEvent contains additional information about an exchange in a chat.
@@ -22,7 +23,6 @@ import org.apache.log4j.spi.LoggingEvent;
  * and it won't be recognized by the chatlog-specific filters and layouts).
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class ChatLogEvent extends LoggingEvent
 {
@@ -37,10 +37,10 @@ public class ChatLogEvent extends LoggingEvent
 
     /** The id of the bot. */
     private String botid;
-    
+
     /** The fully qualified class name of the Logger class. */
     private static final String LOGGER_FQCN = Logger.class.getName();
-    
+
     /**
      * Creates a new ChatLogEvent.
      * 
@@ -51,12 +51,9 @@ public class ChatLogEvent extends LoggingEvent
      */
     public ChatLogEvent(String bot, String user, String in, String out)
     {
-        super(LOGGER_FQCN,
-                Logger.getLogger("programd." + bot),
-                Level.INFO,
-                String.format("%s -> %s: \"%s\"; %s -> %s: \"%s\"",
-                        user, bot, in, bot, user, XMLKit.filterWhitespace(XMLKit.removeMarkup(out))),
-                null);
+        super(LOGGER_FQCN, Logger.getLogger("programd." + bot), Level.INFO, String.format(
+                "%s -> %s: \"%s\"; %s -> %s: \"%s\"", user, bot, in, bot, user, Text.normalizeString(Characters
+                        .removeMarkup(out))), null);
         this.botid = bot;
         this.userid = user;
         this.input = in;

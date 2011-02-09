@@ -9,20 +9,15 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
 
 /**
- * <p>
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-person2">person2</a></code>
- * element.
- * </p>
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-person2">person2</a></code> element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
@@ -35,11 +30,11 @@ public class Person2Processor extends SubstitutionProcessor
     /**
      * Creates a new Person2Processor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public Person2Processor(Core coreToUse)
+    public Person2Processor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**

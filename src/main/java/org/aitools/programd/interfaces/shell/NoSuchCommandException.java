@@ -10,16 +10,15 @@
 package org.aitools.programd.interfaces.shell;
 
 /**
- * Thrown by {@link ShellCommandRegistry} if a command line
- * is passed that does not contain a recognized command.
+ * Thrown by {@link ShellCommandRegistry} if a command line is passed that does not contain a recognized command.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class NoSuchCommandException extends Exception
 {
     /**
-     * Constructs a new exception
+     * Constructs a new exception.
+     * 
      * @param commandLine the command line that generated the exception
      */
     public NoSuchCommandException(String commandLine)

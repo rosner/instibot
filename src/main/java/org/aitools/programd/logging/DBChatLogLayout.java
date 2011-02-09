@@ -17,13 +17,9 @@ import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class DBChatLogLayout extends SimpleLayout
 {
-    /** The string &quot;{@value}&quot; (for character encoding conversion). */
-    private static final String ENC_UTF8 = "utf-8";
-
     /**
      * Creates a new SimpleFormatter with the given Core settings.
      */
@@ -46,8 +42,7 @@ public class DBChatLogLayout extends SimpleLayout
     {
         if (!(event instanceof ChatLogEvent))
         {
-            throw new IllegalArgumentException(
-                    "DBChatLogLayout is intended to handle ChatLogEvents only.");
+            throw new IllegalArgumentException("DBChatLogLayout is intended to handle ChatLogEvents only.");
         }
         return format((ChatLogEvent) event);
     }
@@ -57,16 +52,14 @@ public class DBChatLogLayout extends SimpleLayout
      *            the ChatLogEvent to format
      * @return the result of formatting the given ChatLogEvent
      */
-    public String format(ChatLogEvent event)
+    public static String format(ChatLogEvent event)
     {
         try
         {
             return String.format(
-                    "insert into chatlog (userid, botid, input, response) values ('%s', '%s', '%s', '%s')",
-                    URLEncoder.encode(event.getUserID(), ENC_UTF8),
-                    URLEncoder.encode(event.getBotID(), ENC_UTF8),
-                    URLEncoder.encode(event.getInput(), ENC_UTF8),
-                    URLEncoder.encode(event.getReply(), ENC_UTF8));
+                    "insert into chatlog (userid, botid, input, response) values ('%s', '%s', '%s', '%s')", URLEncoder
+                            .encode(event.getUserID(), "utf-8"), URLEncoder.encode(event.getBotID(), "utf-8"),
+                    URLEncoder.encode(event.getInput(), "utf-8"), URLEncoder.encode(event.getReply(), "utf-8"));
         }
         catch (UnsupportedEncodingException e)
         {

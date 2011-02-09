@@ -14,9 +14,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * A Heart beats. At a configurable interval, it calls pulse() methods on some
- * objects (currently only the parent static Multiplexor) in order to provide
- * assurance that the bot server is alive.
+ * A Heart beats. At a configurable interval, it calls pulse() methods on some objects (currently only the parent static
+ * Multiplexor) in order to provide assurance that the bot server is alive.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
@@ -26,7 +25,7 @@ public class Heart
     private Timer timer;
 
     /** The pulse rate. */
-    private int pulserate;
+    private int _pulserate;
 
     /** Will hold a set of Pulses. */
     private ArrayList<Pulse> pulses = new ArrayList<Pulse>();
@@ -34,11 +33,11 @@ public class Heart
     /**
      * Creates a new Heart with the given pulse rate.
      * 
-     * @param pulserateToUse the pulse rate to use
+     * @param pulserate the pulse rate to use
      */
-    public Heart(int pulserateToUse)
+    public Heart(int pulserate)
     {
-        this.pulserate = pulserateToUse;
+        this._pulserate = pulserate;
     }
 
     /**
@@ -49,7 +48,7 @@ public class Heart
         int pulse = 0;
         try
         {
-            pulse = 60000 / this.pulserate;
+            pulse = 60000 / this._pulserate;
         }
         catch (NumberFormatException e)
         {
@@ -66,7 +65,7 @@ public class Heart
      * 
      * @param pulse the period in milliseconds
      */
-    private void startBeating(int pulse)
+    protected void startBeating(int pulse)
     {
         this.timer = new Timer();
         this.timer.schedule(new HeartBeat(), 0, pulse);

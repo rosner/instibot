@@ -5,44 +5,43 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
-import javax.xml.parsers.DocumentBuilder;
-
-import org.aitools.programd.multiplexor.Multiplexor;
-import org.aitools.programd.util.DeveloperError;
-import org.aitools.programd.util.UserError;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.programd.Core;
+import org.aitools.util.runtime.DeveloperError;
+import org.aitools.util.xml.Characters;
+import org.aitools.util.xml.JDOM;
 import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.Namespace;
 
 /**
  * A TestSuite comprises a set of TestCases.
  * 
  * @author Albertas Mickensas
- * @since 4.5
  */
 public class TestSuite implements Iterable<TestCase>
 {
-    /** The test cases namespace URI. */
-    public static final String TESTCASE_NAMESPACE_URI = "http://aitools.org/programd/4.6/test-cases";
+    /** The test suite namespace URI. */
+    public static final String TESTSUITE_NAMESPACE_URI = "http://aitools.org/xaiml/test-suite";
+
+    private static final Namespace TESTSUITE_NAMESPACE = Namespace.getNamespace("http://aitools.org/xaiml/test-suite");
 
     /** The test cases in this suite. */
     ArrayList<TestCase> testCases = new ArrayList<TestCase>();
 
     /** The name of the test suite. */
-    private String name;
+    private String _name;
 
     /** The clearInput to use for this test suite. */
-    private String clearInput;
+    private String _clearInput;
 
-    /** The Multiplexor to use. */
-    private Multiplexor multiplexor;
-    
+    /** The Core in use. */
+    private Core _core;
+
     /** The Logger. */
-    private Logger logger;
+    private Logger _logger;
 
     /** The test auccesses accumulated by this suite. */
     private LinkedList<TestResult> successes = new LinkedList<TestResult>();
@@ -56,41 +55,43 @@ public class TestSuite implements Iterable<TestCase>
     /**
      * Creates a new TestSuite.
      * 
-     * @param nameToUse the name to give the test suite
-     * @param clearInputToUse the clearInput for the test suite
-     * @param multiplexorToUse the multiplexor to use
+     * @param name the name to give the test suite
+     * @param clearInput the clearInput for the test suite
+     * @param core the core to use
+     * @param logger
      */
-    public TestSuite(String nameToUse, String clearInputToUse, Multiplexor multiplexorToUse, Logger loggerToUse)
+    public TestSuite(String name, String clearInput, Core core, Logger logger)
     {
-        this.name = nameToUse;
-        this.clearInput = clearInputToUse;
-        this.multiplexor = multiplexorToUse;
-        this.logger = loggerToUse;
+        this._name = name;
+        this._clearInput = clearInput;
+        this._core = core;
+        this._logger = logger;
     }
 
     /**
      * Creates a new TestSuite (with no clearInput).
      * 
-     * @param nameToUse the name to give the test suite
-     * @param multiplexorToUse the multiplexor to use
+     * @param name the name to give the test suite
+     * @param core the multiplexor to use
+     * @param logger
      */
-    public TestSuite(String nameToUse, Multiplexor multiplexorToUse, Logger loggerToUse)
+    public TestSuite(String name, Core core, Logger logger)
     {
-        this.name = nameToUse;
-        this.multiplexor = multiplexorToUse;
-        this.logger = loggerToUse;
+        this._name = name;
+        this._core = core;
+        this._logger = logger;
     }
 
     /**
      * Creates a new TestSuite (with no clearInput or Multiplexor(!)).
      * 
-     * @param nameToUse the name to give the test suite
+     * @param name the name to give the test suite
+     * @param logger
      */
-    @SuppressWarnings("unused")
-    private TestSuite(String nameToUse, Logger loggerToUse)
+    protected TestSuite(String name, Logger logger)
     {
-        this.name = nameToUse;
-        this.logger = loggerToUse;
+        this._name = name;
+        this._logger = logger;
     }
 
     /**
@@ -125,7 +126,7 @@ public class TestSuite implements Iterable<TestCase>
      */
     public String getName()
     {
-        return this.name;
+        return this._name;
     }
 
     /**
@@ -136,41 +137,39 @@ public class TestSuite implements Iterable<TestCase>
      */
     public boolean run(String botid)
     {
-        if (this.clearInput != null)
+        if (this._clearInput != null && this._clearInput.length() > 0)
         {
-            this.multiplexor.getResponse(this.clearInput, TESTER_ID, botid);
+            this._core.getResponse(this._clearInput, TESTER_ID, botid);
         }
 
         this.failures.clear();
         boolean suiteSuccessful = true;
         for (TestCase testCase : this.testCases)
         {
-            boolean caseSuccessful = testCase.run(this.multiplexor, TESTER_ID, botid);
+            boolean caseSuccessful = testCase.run(this._core, TESTER_ID, botid);
             String testcaseName = testCase.getName();
             if (!caseSuccessful)
             {
-                this.logger.warn("Test case \"" + testcaseName + "\" failed with response \"" +
-                        XMLKit.removeMarkup(testCase.getLastResponse()) + "\".");
-                registerFailure(this.name, testCase.getName(), testCase.getInput(), testCase
-                        .getLastResponse());
+                this._logger.warn(String.format("Test case \"%s\" failed with response \"%s\".", testcaseName, Characters
+                        .removeMarkup(testCase.getLastResponse())));
+                registerFailure(this._name, testCase.getName(), testCase.getInput(), testCase.getLastResponse());
             }
             else
             {
-                this.logger.info("Test case " + testcaseName + " succeeded.");
-                registerSuccess(this.name, testCase.getName(), testCase.getInput(), testCase
-                        .getLastResponse());
+                this._logger.info(String.format("Test case \"%s\" succeeded.", testcaseName));
+                registerSuccess(this._name, testCase.getName(), testCase.getInput(), testCase.getLastResponse());
             }
             suiteSuccessful &= caseSuccessful;
         }
         return suiteSuccessful;
     }
 
-    private void registerSuccess(String suite, String tcase, String pattern, String response)
+    protected void registerSuccess(String suite, String tcase, String pattern, String response)
     {
         this.successes.add(new TestResult(suite, tcase, pattern, response));
     }
 
-    private void registerFailure(String suite, String tcase, String pattern, String response)
+    protected void registerFailure(String suite, String tcase, String pattern, String response)
     {
         this.failures.add(new TestResult(suite, tcase, pattern, response));
     }
@@ -195,51 +194,43 @@ public class TestSuite implements Iterable<TestCase>
      * Loads a test suite from the given path.
      * 
      * @param path the path from which to load the test suite
-     * @param schema the URL to the copy of the schema for test cases
+     * @param logger
      * @return the loaded test suite
      */
-    public static TestSuite load(URL path, URL schema, Logger logger)
+    public static TestSuite load(URL path, Logger logger)
     {
-        return load(path, schema, null, logger);
+        return load(path, null, logger);
     }
 
     /**
      * Loads a test suite from the given path.
      * 
      * @param path the path from which to load the test suite
-     * @param schema the URL to the copy of the schema for test cases
-     * @param multiplexor the multiplexor to use
+     * @param core the core to use
+     * @param logger
      * @return the loaded test suite
      */
-    public static TestSuite load(URL path, URL schema, Multiplexor multiplexor, Logger logger)
+    @SuppressWarnings("unchecked")
+    public static TestSuite load(URL path, Core core, Logger logger)
     {
-        DocumentBuilder builder = XMLKit.getDocumentBuilder(schema, "test cases");
-        Document doc;
+        Document document = JDOM.getDocument(path, logger);
+        String encoding;
         try
         {
-            doc = builder.parse(path.toString());
+            encoding = Characters.getDeclaredXMLEncoding(path);
         }
         catch (IOException e)
         {
-            throw new DeveloperError("IO exception trying to parse test suite file.", e);
+            throw new DeveloperError("Could not get encoding of test suite file.", e);
         }
-        catch (SAXException e)
+        Element testSuiteElement = document.getRootElement();
+        TestSuite suite = new TestSuite(testSuiteElement.getAttributeValue("name"), testSuiteElement
+                .getAttributeValue("clearInput"), core, logger);
+        int index = 0;
+        for (Element testCaseElement : (List<Element>) testSuiteElement.getChildren(TestCase.TAG_TESTCASE,
+                TESTSUITE_NAMESPACE))
         {
-            throw new UserError("SAX exception trying to parse test suite file: "
-                    + e.getMessage(), e);
-        }
-        String encoding = doc.getXmlEncoding();
-        Element testSuiteElement = doc.getDocumentElement();
-        TestSuite suite = new TestSuite(testSuiteElement.getAttribute("name"), testSuiteElement
-                .getAttribute("clearInput"), multiplexor, logger);
-    
-        NodeList testCases = doc.getElementsByTagNameNS(TESTCASE_NAMESPACE_URI,
-                TestCase.TAG_TESTCASE);
-        int testCaseCount = testCases.getLength();
-        for (int index = 0; index < testCaseCount; index++)
-        {
-            Element testCaseElement = (Element) testCases.item(index);
-            TestCase testCase = new TestCase(testCaseElement, encoding, index);
+            TestCase testCase = new TestCase(testCaseElement, encoding, index++);
             suite.addTestCase(testCase);
         }
         return suite;

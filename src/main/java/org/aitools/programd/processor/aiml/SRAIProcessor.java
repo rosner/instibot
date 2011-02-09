@@ -9,20 +9,16 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
-import org.aitools.programd.parser.TemplateParserException;
 import org.aitools.programd.processor.ProcessorException;
 import org.apache.log4j.Logger;
 
 /**
- * Implements the &lt;srai/&gt; element.
+ * Implements the <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-srai">srai</a></code> element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
@@ -37,11 +33,11 @@ public class SRAIProcessor extends AIMLProcessor
     /**
      * Creates a new SRAIProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public SRAIProcessor(Core coreToUse)
+    public SRAIProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
@@ -55,52 +51,16 @@ public class SRAIProcessor extends AIMLProcessor
      * @return the result of processing the element
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
-        // Check for some simple kinds of infinite loops.
-        if (element.getChildNodes().getLength() == 1)
-        {
-            Node sraiChild = element.getChildNodes().item(0);
-
-            if (sraiChild.getNodeType() == Node.TEXT_NODE)
-            {
-                String sraiContent = sraiChild.getTextContent();
-                for (String input : parser.getInputs())
-                {
-                    if (sraiContent.equalsIgnoreCase(input))
-                    {
-                        String infiniteLoopInput = parser.getCore().getSettings().getInfiniteLoopInput();
-                        if (!input.equalsIgnoreCase(infiniteLoopInput))
-                        {
-                            sraiChild.setTextContent(infiniteLoopInput);
-                            aimlLogger.warn("Infinite loop detected; substituting \"" + infiniteLoopInput + "\".");
-                        }
-                        else
-                        {
-                            aimlLogger.error("Unrecoverable infinite loop.");
-                            return EMPTY_STRING;
-                        }
-                    }
-                }
-                parser.addInput(sraiContent);
-            }
-        }
-
+        String input = parser.evaluate(element.getContent());
         matchLogger.debug("[SYMBOLIC REDUCTION]");
-
-        String input = parser.evaluate(element.getChildNodes());
         String userid = parser.getUserID();
         String botid = parser.getBotID();
-        try
-        {
-            return this.core.getMultiplexor()
-                    .getInternalResponse(input, userid, botid,
-                            new TemplateParser(input, userid, botid, this.core));
-        }
-        catch (TemplateParserException e)
-        {
-            throw new ProcessorException("Could not create new TemplateParser for <srai/>.", e);
-        }
+        TemplateParser recursiveParser =
+            new TemplateParser(parser.getInputs(), parser.getThats(), parser.getTopics(), userid, botid, this._core);
+        return this._core.getInternalResponse(input, userid, botid, recursiveParser);
     }
 }

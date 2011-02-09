@@ -17,96 +17,93 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
+import org.aitools.util.runtime.Errors;
+
 /**
  * Provides utility methods for pattern-oriented tasks.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.1.3
  */
 public class PatternArbiter
 {
     /** The regular expression that defines AIML pattern syntax. */
-    private static final Pattern AIML_PATTERN = Pattern.compile("(\\*|_|[\\p{javaUpperCase}\\p{Digit}]+)( (\\*|_|[\\p{javaUpperCase}\\p{Digit}]+))*");
-    
+    private static final Pattern AIML_PATTERN = Pattern
+            .compile("(\\*|_|[\\p{javaUpperCase}\\p{javaDigit}]+)( (\\*|_|[\\p{javaUpperCase}\\p{javaDigit}]+))*");
+
     /** The generic normalization regex that matches any nonalphanumeric. */
-    private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^\\p{javaUpperCase}\\p{javaLowerCase}\\p{javaWhitespace}\\p{Digit} ]+");
+    private static final Pattern NON_ALPHANUMERIC = Pattern
+            .compile("[^\\p{javaUpperCase}\\p{javaLowerCase}\\p{javaWhitespace}\\p{javaDigit} ]+");
     
+    /** A pattern that matches multiple consecutive spaces. */
+    private static final Pattern MLC_SPACES = Pattern.compile("  +");
+
     /**
-     * Applies a generic set of normalizations to an input, to prepare it
-     * for pattern matching.
+     * Applies a generic set of normalizations to an input, to prepare it for pattern matching.
      * 
      * @param string the input to normalize
      * @return the normalized input
      */
     public static String genericallyNormalize(String string)
     {
-        return NON_ALPHANUMERIC.matcher(string).replaceAll(" ");
+        return MLC_SPACES.matcher(NON_ALPHANUMERIC.matcher(string).replaceAll(" ")).replaceAll(" ").trim();
     }
-    
+
     /**
-     * Translates the given AIML pattern to a regular expression and
-     * compiles it into a Pattern object.  Useful if you need to do a
-     * ton of tests with a pattern.
+     * Translates the given AIML pattern to a regular expression and compiles it into a Pattern object. Useful if you
+     * need to do a ton of tests with a pattern.
      * 
      * @param pattern the pattern to compile
      * @param ignoreCase whether to ignore case in matching
      * @return the compiled pattern (translated to regex)
-     *
-     * @throws NotAnAIMLPatternException if the pattern is not a valid AIML
-     *             pattern (conditioned by <code>ignoreCase</code>
+     * 
+     * @throws NotAnAIMLPatternException if the pattern is not a valid AIML pattern (conditioned by
+     *             <code>ignoreCase</code>
      */
     public static Pattern compile(String pattern, boolean ignoreCase) throws NotAnAIMLPatternException
     {
-        /*
-         * Check the pattern for validity. If it is invalid, an exception with a
-         * helpful message will be thrown.
-         */
-        checkAIMLPattern(pattern);
+        // Check the pattern for validity. If it is invalid, throw an exception with a helpful message.
+        if (!isValidAIMLPattern(pattern))
+        {
+            throw new NotAnAIMLPatternException(String.format("\"%s\" does not match the definition of AIML pattern.", pattern), pattern);
+        }
 
-        return Pattern.compile(pattern.replaceAll("(\\*|_)", "[^ ]+( [^ ]+)*"),
-                (ignoreCase ? Pattern.UNICODE_CASE : 0));
+        return Pattern
+                .compile(pattern.replaceAll("(\\*|_)", "[^ ]+( [^ ]+)*"), (ignoreCase ? Pattern.UNICODE_CASE : 0));
     }
-    
+
     /**
-     * Decides whether a given pattern matches a given literal, in an isolated
-     * context, according to the AIML pattern-matching specification.
+     * Decides whether a given pattern matches a given literal, in an isolated context, according to the AIML
+     * pattern-matching specification.
      * 
-     * Indicates whether the given literal is matched by the given pattern.
-     * Note that the mechanism here is very simple: the AIML pattern is
-     * converted into an equivalent regular expression, and a match test
-     * is performed.  This appears to be much more reliable than an old
-     * method that "manually" checked the match.
+     * Indicates whether the given literal is matched by the given pattern. Note that the mechanism here is very simple:
+     * the AIML pattern is converted into an equivalent regular expression, and a match test is performed. This appears
+     * to be much more reliable than an old method that "manually" checked the match.
      * 
-     * This method uses a generic normalization that removes all punctuation
-     * from the input.
+     * This method uses a generic normalization that removes all punctuation from the input.
      * 
      * @param literal the literal string to check
      * @param pattern the pattern to try to match against it
      * @param ignoreCase whether or not to ignore case
-     * @return <code>true</code> if <code>pattern</code> matches
-     *         <code>literal</code>,<code>false</code> if not
-     * @throws NotAnAIMLPatternException if the pattern is not a valid AIML
-     *             pattern (conditioned by <code>ignoreCase</code>
+     * @return <code>true</code> if <code>pattern</code> matches <code>literal</code>,<code>false</code> if
+     *         not
+     * @throws NotAnAIMLPatternException if the pattern is not a valid AIML pattern (conditioned by
+     *             <code>ignoreCase</code>
      */
     public static boolean matches(String literal, String pattern, boolean ignoreCase) throws NotAnAIMLPatternException
     {
         Pattern regex = compile(pattern, ignoreCase);
         return regex.matcher(genericallyNormalize(literal)).matches();
     }
-    
+
     /**
      * Determines whether a given string is a valid AIML pattern.
      * 
      * @param pattern the string to check
-     * @throws NotAnAIMLPatternException with a helpful message if the pattern
-     *             is not valid
+     * @return whether the string is a valid AIML pattern
      */
-    public static void checkAIMLPattern(String pattern) throws NotAnAIMLPatternException
+    public static boolean isValidAIMLPattern(String pattern)
     {
-        if (!AIML_PATTERN.matcher(pattern).matches())
-        {
-            throw new NotAnAIMLPatternException("\"" + pattern + "\" does not match the definition of AIML pattern.", pattern);
-        }
+        return AIML_PATTERN.matcher(pattern).matches();
     }
 
     /**
@@ -114,6 +111,7 @@ public class PatternArbiter
      * 
      * @param args not used
      */
+    @SuppressWarnings("boxing")
     public static void main(String[] args)
     {
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -172,36 +170,33 @@ public class PatternArbiter
                 }
                 catch (NotAnAIMLPatternException e)
                 {
-                    System.out.println("Exception: " + e.getMessage());
+                    System.out.println(String.format("Exception: \"%s\"", Errors.describe(e)));
                     matched = false;
                 }
                 time = new Date().getTime() - time;
 
+                System.out.print("TEST ");
                 if (matched == prediction)
                 {
                     successes++;
-                    System.out.print("TEST PASSED] ");
+                    System.out.print("PASSED] ");
                 }
                 else
                 {
                     failures++;
-                    System.out.print("TEST FAILED] ");
+                    System.out.print("FAILED] ");
                 }
-                if (matched)
+                if (!matched)
                 {
-                    System.out.print("match: " + literal + " | " + pattern + (ignoreCase ? " (ignoreCase)" : ""));
+                    System.out.print("no ");
                 }
-                else
-                {
-                    System.out.print("no match: " + literal + " | " + pattern + (ignoreCase ? " (ignoreCase)" : ""));
-                }
-                System.out.println(" (" + time + " ms)");
+                System.out.print(String.format("match: %s | %s%s (%d ms)", literal, pattern, (ignoreCase ? " (ignoreCase)" : ""), time));
             }
             else
             {
                 System.out.println(theLine);
             }
         }
-        System.out.println((successes + failures) + " tests: " + successes + " successes, " + failures + " failures");
+        System.out.println(String.format("%d tests: %d successes, %d failures.", (successes + failures), successes, failures));
     }
 }

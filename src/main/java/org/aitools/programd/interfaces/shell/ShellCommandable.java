@@ -10,26 +10,21 @@
 package org.aitools.programd.interfaces.shell;
 
 /**
- * Defines the interface for processes that can receive commands from the
- * interactive {@link Shell} .
+ * Defines the interface for processes that can receive commands from the interactive {@link Shell} .
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @version 4.5
  */
 public interface ShellCommandable
 {
     /**
-     * Returns a string that can be used to send commands to the listener from
-     * the interactive shell.
+     * Returns a string that can be used to send commands to the listener from the interactive shell.
      * 
-     * @return a string that can be used to send commands to the listener from
-     *         the interactive shell
+     * @return a string that can be used to send commands to the listener from the interactive shell
      */
     public String getShellID();
 
     /**
-     * Returns a string that describes the listener when getting a listener list
-     * in the interactive shell.
+     * Returns a string that describes the listener when getting a listener list in the interactive shell.
      * 
      * @return a string that describes the listener
      */
@@ -44,8 +39,8 @@ public interface ShellCommandable
     public String getShellCommands();
 
     /**
-     * Sends a command to the shell. The <code>ShellCommandable</code> itself
-     * is responsible for putting back any output to the shell.
+     * Sends a command to the shell. The <code>ShellCommandable</code> itself is responsible for putting back any
+     * output to the shell.
      * 
      * @param command the command to send to the shell
      */

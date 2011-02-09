@@ -12,16 +12,11 @@ package org.aitools.programd.processor.aiml;
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 /**
- * <p>
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-gender">gender</a></code>
- * element.
- * </p>
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-gender">gender</a></code> element.
  * 
- * @version 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
@@ -34,11 +29,11 @@ public class GenderProcessor extends SubstitutionProcessor
     /**
      * Creates a new GenderProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public GenderProcessor(Core coreToUse)
+    public GenderProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**

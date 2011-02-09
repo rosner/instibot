@@ -12,18 +12,19 @@ package org.aitools.programd.logging;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 
-
 /**
  * Accepts a ChatLogEvent if it comes from a specific bot id;
  * denies it otherwise.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class BotIDFilter extends Filter
 {
     private String botid;
-    
+
+    /**
+     * @see org.apache.log4j.spi.Filter#decide(org.apache.log4j.spi.LoggingEvent)
+     */
     @Override
     public int decide(LoggingEvent event)
     {
@@ -34,6 +35,9 @@ public class BotIDFilter extends Filter
         return ((ChatLogEvent) event).getBotID().equals(this.botid) ? Filter.ACCEPT : Filter.DENY;
     }
 
+    /**
+     * @param id
+     */
     public void setBotID(String id)
     {
         this.botid = id;

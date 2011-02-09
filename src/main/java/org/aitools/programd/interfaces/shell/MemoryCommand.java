@@ -9,7 +9,7 @@
 
 package org.aitools.programd.interfaces.shell;
 
-import org.aitools.programd.util.UserSystem;
+import org.aitools.util.runtime.UserSystem;
 
 /**
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
@@ -19,13 +19,13 @@ public class MemoryCommand extends ShellCommand
 {
     /** Shell command string. */
     public static final String COMMAND_STRING = "/memory";
-    
+
     /** Argument template. */
     public static final String ARGUMENT_TEMPLATE = "";
-    
+
     /** Shell help line. */
     private static final String HELP_LINE = "shows statistics on free/available memory";
-    
+
     /**
      * Creates a new LoadCommand.
      */
@@ -44,11 +44,12 @@ public class MemoryCommand extends ShellCommand
     }
 
     /**
-     * Attempts to load a specified file into the Graphmaster.
+     * Displays a report of memory usage.
      * 
      * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String, org.aitools.programd.interfaces.shell.Shell)
      */
     @Override
+    @SuppressWarnings("unused")
     public void handle(String commandLine, Shell shell)
     {
         shell.showMessage(UserSystem.memoryReport());

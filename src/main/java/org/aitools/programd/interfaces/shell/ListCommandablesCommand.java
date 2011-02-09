@@ -15,7 +15,6 @@ import org.aitools.programd.util.ManagedProcess;
  * Prints a list of the available ShellCommandables to the shell console.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class ListCommandablesCommand extends ShellCommand
 {
@@ -24,10 +23,10 @@ public class ListCommandablesCommand extends ShellCommand
 
     /** Argument template. */
     public static final String ARGUMENT_TEMPLATE = "";
-    
+
     /** Shell help line. */
     private static final String HELP_LINE = "lists available \"shell commandables\" (such as some listeners)";
-    
+
     /**
      * Creates a new ListCommandablesCommand.
      */
@@ -51,7 +50,8 @@ public class ListCommandablesCommand extends ShellCommand
      * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String, org.aitools.programd.interfaces.shell.Shell)
      */
     @Override
-    public void handle(@SuppressWarnings("unused") String commandLine, Shell shell)
+    @SuppressWarnings("unused")
+    public void handle(String commandLine, Shell shell)
     {
         int commandableCount = 0;
         shell.showMessage("Available shell commandables:");

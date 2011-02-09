@@ -5,7 +5,6 @@ package org.aitools.programd.test.aiml;
  * 
  * @author Albertas Mickensas
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class TestResult
 {
@@ -29,15 +28,14 @@ public class TestResult
      * @param in the input
      * @param out the response
      */
-    public TestResult(String suiteName, String testCaseName, String in,
-            String out)
+    public TestResult(String suiteName, String testCaseName, String in, String out)
     {
         this.suite = suiteName;
         this.testCase = testCaseName;
         this.input = in;
         this.response = out;
     }
-    
+
     /**
      * Creates an object that represents the test result,
      * with no suite name or test case name attached.
@@ -81,7 +79,7 @@ public class TestResult
     @Override
     public String toString()
     {
-        return "Suite:\t" + this.suite + "\ttestcase:\t " + this.testCase + "\tinput:\t\""
-                + this.input + "\" response: \"" + this.response + "\"";
+        return "Suite:\t" + this.suite + "\ttestcase:\t " + this.testCase + "\tinput:\t\"" + this.input
+                + "\" response: \"" + this.response + "\"";
     }
 }

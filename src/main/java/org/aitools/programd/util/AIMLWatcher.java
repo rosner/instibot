@@ -17,6 +17,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.aitools.programd.Core;
+import org.aitools.util.resource.URLTools;
 import org.apache.log4j.Logger;
 
 /**
@@ -24,14 +25,13 @@ import org.apache.log4j.Logger;
  * 
  * @author Jon Baer
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @version 4.6
  */
 public class AIMLWatcher
 {
     /** The Timer that handles watching AIML files. */
     private Timer timer;
 
-    private Core core;
+    private Core _core;
 
     /** Used for storing information about file changes. */
     protected Map<URL, Long> watchMap = new HashMap<URL, Long>();
@@ -41,12 +41,12 @@ public class AIMLWatcher
     /**
      * Creates a new AIMLWatcher using the given Graphmaster
      * 
-     * @param coreToUse the Core to use
+     * @param core the Core to use
      */
-    public AIMLWatcher(Core coreToUse)
+    public AIMLWatcher(Core core)
     {
-        this.core = coreToUse;
-        this.logger = this.core.getLogger();
+        this._core = core;
+        this.logger = this._core.getLogger();
     }
 
     /**
@@ -55,9 +55,9 @@ public class AIMLWatcher
     public void start()
     {
         this.timer = new Timer(true);
-        this.timer.schedule(new CheckAIMLTask(), 0, this.core.getSettings().getWatcherTimer());
+        this.timer.schedule(new CheckAIMLTask(), 0, this._core.getSettings().getAIMLWatcherTimer());
     }
-    
+
     /**
      * Stops the AIMLWatcher.
      */
@@ -76,8 +76,8 @@ public class AIMLWatcher
      */
     protected void reload(URL path)
     {
-        this.logger.info(String.format("AIMLWatcher reloading \"%s\".", path));
-        this.core.reload(path);
+        this.logger.info(String.format("AIMLWatcher reloading \"%s\".", URLTools.unescape(path)));
+        this._core.reload(path);
     }
 
     /**
@@ -88,11 +88,10 @@ public class AIMLWatcher
     @SuppressWarnings("boxing")
     public void addWatchFile(URL path)
     {
-        if (this.logger.isDebugEnabled())
-        {
-            this.logger.debug(String.format("Adding watch file \"%s\".", path));
-        }
-        synchronized(this)
+        /*
+         * if (this.logger.isDebugEnabled()) { this.logger.debug(String.format("Adding watch file \"%s\".", path)); }
+         */
+        synchronized (this)
         {
             if (URLTools.seemsToExist(path))
             {
@@ -103,7 +102,8 @@ public class AIMLWatcher
             }
             else
             {
-                this.logger.warn(String.format("AIMLWatcher cannot read path \"%s\"", path), new IOException());
+                this.logger.warn(String.format("AIMLWatcher cannot read path \"%s\"", URLTools.unescape(path)),
+                        new IOException());
             }
         }
     }

@@ -9,15 +9,13 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-bot">bot</a></code>
- * element.
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-bot">bot</a></code> element.
  * 
  * @see AIMLProcessor
  */
@@ -26,11 +24,11 @@ public class BotProcessor extends AIMLProcessor
     /**
      * Creates a new BotProcessor with the given Core.
      * 
-     * @param coreToUse the Core to use in creating the BotProcessor
+     * @param core the Core to use in creating the BotProcessor
      */
-    public BotProcessor(Core coreToUse)
+    public BotProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /** The label (as required by the registration scheme). */
@@ -46,6 +44,6 @@ public class BotProcessor extends AIMLProcessor
     @Override
     public String process(Element element, TemplateParser parser)
     {
-        return parser.getCore().getBot(parser.getBotID()).getPropertyValue(element.getAttribute(NAME));
+        return parser.getCore().getBot(parser.getBotID()).getPropertyValue(element.getAttributeValue("name"));
     }
 }

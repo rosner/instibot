@@ -11,30 +11,28 @@ package org.aitools.programd.interfaces.shell;
 
 import java.util.Collection;
 
-import org.aitools.programd.util.ObjectExemplarRegistry;
+import org.aitools.util.ObjectExemplarRegistry;
 
 /**
  * Maps ShellCommands to their command strings.
  * 
- * @since 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class ShellCommandRegistry extends ObjectExemplarRegistry<ShellCommand>
 {
     /** The list of built-in shell commands (fully-qualified class names). */
     private static final String[] COMMAND_LIST = { "org.aitools.programd.interfaces.shell.AIMLCommand",
-                                                   "org.aitools.programd.interfaces.shell.BotListCommand",
-                                                   "org.aitools.programd.interfaces.shell.CategoriesCommand",
-                                                   "org.aitools.programd.interfaces.shell.HelpCommand",
-                                                   "org.aitools.programd.interfaces.shell.ListBotFilesCommand",
-                                                   "org.aitools.programd.interfaces.shell.ListCommandablesCommand",
-                                                   "org.aitools.programd.interfaces.shell.LoadCommand",
-                                                   "org.aitools.programd.interfaces.shell.MemoryCommand",
-                                                   "org.aitools.programd.interfaces.shell.TalkToCommand",
-                                                   "org.aitools.programd.test.aiml.TestCommand",
-                                                   "org.aitools.programd.interfaces.shell.UnloadCommand",
-                                                   "org.aitools.programd.interfaces.shell.WhoCommand" };
-    
+            "org.aitools.programd.interfaces.shell.BotListCommand",
+            "org.aitools.programd.interfaces.shell.CategoriesCommand",
+            "org.aitools.programd.interfaces.shell.FlushPredicatesCommand",
+            "org.aitools.programd.interfaces.shell.HelpCommand",
+            "org.aitools.programd.interfaces.shell.ListBotFilesCommand",
+            "org.aitools.programd.interfaces.shell.ListCommandablesCommand",
+            "org.aitools.programd.interfaces.shell.LoadCommand", "org.aitools.programd.interfaces.shell.MemoryCommand",
+            "org.aitools.programd.interfaces.shell.PrintGraphCommand",
+            "org.aitools.programd.interfaces.shell.TalkToCommand", "org.aitools.programd.test.aiml.TestCommand",
+            "org.aitools.programd.interfaces.shell.UnloadCommand", "org.aitools.programd.interfaces.shell.WhoCommand" };
+
     /**
      * Creates a new <code>AIMLProcessorRegistry</code>, with
      * no additional commands.
@@ -60,7 +58,7 @@ public class ShellCommandRegistry extends ObjectExemplarRegistry<ShellCommand>
         }
         throw new NoSuchCommandException(commandLine);
     }
-    
+
     /**
      * @return the values stored in this map
      */

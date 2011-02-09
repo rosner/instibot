@@ -10,32 +10,26 @@
 package org.aitools.programd.util;
 
 /**
- * Thrown by {@link PatternArbiter} when it gets a pattern candidate that does
- * not meet the definition of an AIML pattern.
+ * Thrown by {@link PatternArbiter} when it gets a pattern candidate that does not meet the definition of an AIML
+ * pattern.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class NotAnAIMLPatternException extends Exception
 {
     /** The pattern which this exception concerns. */
-    private String pattern;
-
-    /** First part of a message. */
-    private static final String MSG_PART_ONE = "Not an AIML pattern: \"";
-
-    /** Second part of a message. */
-    private static final String MSG_PART_TWO = "\" - ";
+    private String _pattern;
 
     /**
      * Records the pattern and error message for this exception.
      * 
      * @param message the explanation why this pattern is invalid
-     * @param patternToUse the pattern itself
+     * @param pattern the pattern itself
      */
-    public NotAnAIMLPatternException(String message, String patternToUse)
+    public NotAnAIMLPatternException(String message, String pattern)
     {
         super(message);
-        this.pattern = patternToUse;
+        this._pattern = pattern;
     }
 
     /**
@@ -44,6 +38,6 @@ public class NotAnAIMLPatternException extends Exception
     @Override
     public String getMessage()
     {
-        return MSG_PART_ONE + this.pattern + MSG_PART_TWO + super.getMessage();
+        return String.format("Not an AIML pattern: \"%s\" - %s", this._pattern, super.getMessage());
     }
 }

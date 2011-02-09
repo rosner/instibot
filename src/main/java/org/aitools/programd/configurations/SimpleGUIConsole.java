@@ -10,7 +10,6 @@
 package org.aitools.programd.configurations;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URL;
 
 import gnu.getopt.Getopt;
@@ -19,19 +18,14 @@ import gnu.getopt.LongOpt;
 import org.aitools.programd.Core;
 import org.aitools.programd.CoreShutdownHook;
 import org.aitools.programd.interfaces.graphical.GUIConsole;
-import org.aitools.programd.util.URLTools;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.aitools.util.resource.URLTools;
 
 /**
- * A <code>SimpleGUIConsole</code> gives you running
- * {@link org.aitools.programd.Core Core} attached to a GUI-based
+ * A <code>SimpleGUIConsole</code> gives you running {@link org.aitools.programd.Core Core} attached to a GUI-based
  * {@link org.aitools.programd.interfaces.Console Console}, including a basic
- * {@link org.aitools.programd.interfaces.shell.Shell Shell} attached (if you enable
- * it).
+ * {@link org.aitools.programd.interfaces.shell.Shell Shell} attached (if you enable it).
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.2
  */
 public class SimpleGUIConsole
 {
@@ -41,7 +35,7 @@ public class SimpleGUIConsole
     /** The console. */
     private GUIConsole console;
 
-    private SimpleGUIConsole(String corePropertiesPath) throws FileNotFoundException
+    protected SimpleGUIConsole(String corePropertiesPath) throws FileNotFoundException
     {
         URL baseURL = URLTools.createValidURL(System.getProperty("user.dir"));
         this.console = new GUIConsole();
@@ -59,7 +53,7 @@ public class SimpleGUIConsole
         this.console.startShell();
     }
 
-    private static void usage()
+    protected static void usage()
     {
         System.out.println("Usage: simple-gui-console -c <CORE_CONFIG> -n <CONSOLE_CONFIG>");
         System.out.println("Start up a simple console version of Program D using the specified config files.");
@@ -100,15 +94,9 @@ public class SimpleGUIConsole
 
         if (corePropertiesPath == null)
         {
-            System.out.println("No properties path specified. I use the packaged one!");
-            PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
-            String packageName = "org/aitools/configuration";
-            Resource resource = resourcePatternResolver.getResource("classpath:" + packageName + "/core.xml");
-            try {
-		corePropertiesPath = resource.getFile().getAbsolutePath();
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
+            System.err.println("You must specify a core properties path.");
+            usage();
+            System.exit(1);
         }
 
         SimpleGUIConsole console = null;
@@ -116,13 +104,16 @@ public class SimpleGUIConsole
         {
             console = new SimpleGUIConsole(corePropertiesPath);
         }
-        catch (IOException e)
+        catch (FileNotFoundException e)
         {
-            System.err.println("Core properties file \"" + corePropertiesPath + "\" not found.");
+            System.err.println(String.format("Core properties file \"%s\" not found.", corePropertiesPath));
         }
         // Add a shutdown hook so the Core will be properly shut down if the
         // system exits.
-        Runtime.getRuntime().addShutdownHook(new CoreShutdownHook(console.core));
-        console.run();
+        if (console != null)
+        {
+            Runtime.getRuntime().addShutdownHook(new CoreShutdownHook(console.core));
+            console.run();
+        }
     }
 }

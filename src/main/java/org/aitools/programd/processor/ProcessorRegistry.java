@@ -9,43 +9,50 @@
 
 package org.aitools.programd.processor;
 
-import org.aitools.programd.util.ClassRegistry;
+import org.aitools.util.ClassRegistry;
 
 /**
  * Registers {@link Processor}s associated with a given namespace URI.
  * 
  * @param <B> the base class for the processors
- * @since 4.1.3
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class ProcessorRegistry<B> extends ClassRegistry<B>
 {
-    /**
-     * The namespace URI of the content type for which this registry is
-     * intended.
-     */
-    protected String namespaceURI;
+    /** The namespace URI of the content type for which this registry is intended. */
+    protected String _namespaceURI;
+    
+    /** A description of the type of document handled by these processors. */
+    protected String _type;
 
     /**
-     * Creates a <code>ProcessorRegistry</code> associated with the given
-     * namespace URI.
+     * Creates a <code>ProcessorRegistry</code> associated with the given namespace URI.
      * 
-     * @param namespaceURIToUse the namespace URI for the processors
+     * @param namespaceURI the namespace URI for the processors
+     * @param type a description of the type of document handled by these processors
      * @param classnames the names of the classes to register
      * @see ClassRegistry
      */
-    protected ProcessorRegistry(String namespaceURIToUse, String[] classnames)
+    protected ProcessorRegistry(String namespaceURI, String type, String[] classnames)
     {
         super(classnames);
-        this.namespaceURI = namespaceURIToUse;
+        this._namespaceURI = namespaceURI;
+        this._type = type;
     }
 
     /**
-     * @return the namespace URI of the content type for which this registry
-     *         manages processors
+     * @return the namespace URI of the content type for which this registry manages processors
      */
     public String getNamespaceURI()
     {
-        return this.namespaceURI;
+        return this._namespaceURI;
+    }
+    
+    /**
+     * @return a description of the type of document handled by these processors
+     */
+    public String getType()
+    {
+        return this._type;
     }
 }

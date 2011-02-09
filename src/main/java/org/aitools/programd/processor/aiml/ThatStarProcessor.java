@@ -9,17 +9,14 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-thatstar">thatstar</a></code>
- * element.
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-thatstar">thatstar</a></code> element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
@@ -32,11 +29,11 @@ public class ThatStarProcessor extends IndexedPredicateProcessor
     /**
      * Creates a new ThatStarProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public ThatStarProcessor(Core coreToUse)
+    public ThatStarProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
@@ -45,6 +42,6 @@ public class ThatStarProcessor extends IndexedPredicateProcessor
     @Override
     public String process(Element element, TemplateParser parser)
     {
-        return super.process(element, parser, parser.getThatStars(), 1);
+        return super.process(element, parser, parser.getMostRecentMatch().getThatStars(), 1);
     }
 }

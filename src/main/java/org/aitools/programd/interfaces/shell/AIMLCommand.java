@@ -10,28 +10,24 @@
 package org.aitools.programd.interfaces.shell;
 
 import org.aitools.programd.parser.TemplateParser;
-import org.aitools.programd.parser.TemplateParserException;
-import org.aitools.programd.processor.ProcessorException;
-import org.aitools.programd.util.DeveloperError;
-import org.aitools.programd.util.UserError;
+import org.aitools.util.runtime.UserError;
 
 /**
  * Tries to process a given fragment of template-side AIML.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class AIMLCommand extends ShellCommand
 {
     /** Shell command. */
     public static final String COMMAND_STRING = "/aiml";
-    
+
     /** Argument template. */
     public static final String ARGUMENT_TEMPLATE = "aiml-fragment";
-    
+
     /** Shell help line. */
     private static final String HELP_LINE = "tries to process a fragment of template-side AIML";
-    
+
     /** Template start tag. */
     private static final String TEMPLATE_START = "<template>";
 
@@ -57,7 +53,9 @@ public class AIMLCommand extends ShellCommand
 
     /**
      * Tries to process a given fragment of template-side AIML.
-     * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String, org.aitools.programd.interfaces.shell.Shell)
+     * 
+     * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String,
+     *      org.aitools.programd.interfaces.shell.Shell)
      */
     @Override
     public void handle(String commandLine, Shell shell)
@@ -71,20 +69,13 @@ public class AIMLCommand extends ShellCommand
         else
         {
             // Create a new TemplateParser.
-            TemplateParser parser;
+            TemplateParser parser = new TemplateParser("", "", "", shell.getName(), shell.getCurrentBotID(), shell.getCore());
             try
             {
-                parser = new TemplateParser("", "", shell.getCurrentBotID(), shell.getCore());
+                shell.showMessage(parser.processResponse(TEMPLATE_START + commandLine.substring(space + 1)
+                        + TEMPLATE_END));
             }
-            catch (TemplateParserException e)
-            {
-                throw new DeveloperError("Error occurred while creating new TemplateParser.", e);
-            }
-            try
-            {
-                shell.showMessage(parser.processResponse(TEMPLATE_START + commandLine.substring(space + 1) + TEMPLATE_END));
-            }
-            catch (ProcessorException e)
+            catch (Exception e)
             {
                 throw new UserError("Error occurred while processing template.", e);
             }

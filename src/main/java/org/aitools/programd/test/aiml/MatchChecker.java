@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 public class MatchChecker extends Checker
 {
     private Matcher matcher = null;
-    
-    private static final String EMPTY_STRING = "";
 
     /**
      * Creates a new MatchChecker with the given regular expression.
@@ -21,7 +19,7 @@ public class MatchChecker extends Checker
      */
     public MatchChecker(String pattern)
     {
-        this.matcher = Pattern.compile(pattern, Pattern.CANON_EQ).matcher(EMPTY_STRING);
+        this.matcher = Pattern.compile(pattern, Pattern.CANON_EQ).matcher("");
     }
 
     /**

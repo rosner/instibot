@@ -12,7 +12,7 @@ package org.aitools.programd.logging;
 import java.util.Date;
 
 import org.aitools.programd.logging.ChatLogEvent;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.util.xml.Characters;
 import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.ISO8601DateFormat;
 import org.apache.log4j.spi.LoggingEvent;
@@ -21,36 +21,11 @@ import org.apache.log4j.spi.LoggingEvent;
  * Formats a ChatLogEvent by printing a number of extra fields as we like them.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class XMLChatLogLayout extends Layout
 {
     private ISO8601DateFormat timestampFormatter = new ISO8601DateFormat();
 
-    private static final String EVENT_START = "<record>\n";
-
-    private static final String EVENT_END = "</record>\n";
-
-    private static final String TIME_START = "  <time>";
-
-    private static final String TIME_END = "</time>\n";
-
-    private static final String BOTID_START = "  <botid>";
-
-    private static final String BOTID_END = "</botid>\n";
-
-    private static final String USERID_START = "  <userid>";
-
-    private static final String USERID_END = "</userid>\n";
-
-    private static final String INPUT_START = "  <input>";
-
-    private static final String INPUT_END = "</input>\n";
-
-    private static final String REPLY_START = "  <reply>";
-
-    private static final String REPLY_END = "</reply>\n";
-    
     /**
      * We insist that the record be a ChatLogEvent.
      * 
@@ -75,38 +50,28 @@ public class XMLChatLogLayout extends Layout
     public String format(ChatLogEvent event)
     {
         StringBuilder result = new StringBuilder(1000);
-        result.append(EVENT_START);
-
-        result.append(TIME_START);
-        result.append(this.timestampFormatter.format(new Date(event.timeStamp)));
-        result.append(TIME_END);
-
-        result.append(BOTID_START);
-        result.append(event.getBotID());
-        result.append(BOTID_END);
-
-        result.append(USERID_START);
-        result.append(event.getUserID());
-        result.append(USERID_END);
-
-        result.append(INPUT_START);
-        result.append(XMLKit.escapeXMLChars(event.getInput()));
-        result.append(INPUT_END);
-
-        result.append(REPLY_START);
-        result.append(XMLKit.escapeXMLChars(event.getReply()));
-        result.append(REPLY_END);
-
-        result.append(EVENT_END);
+        result.append(String.format("<record>%n"));
+        result.append(String.format("  <time>%s</time>%n", this.timestampFormatter.format(new Date(event.timeStamp))));
+        result.append(String.format("  <botid>%s</botid>%n", event.getBotID()));
+        result.append(String.format("  <userid>%s</userid>%n", event.getUserID()));
+        result.append(String.format("  <input>%s</input>%n", Characters.escapeXMLChars(event.getInput())));
+        result.append(String.format("  <reply>%s</reply>", Characters.escapeXMLChars(event.getReply())));
+        result.append(String.format("</record>%n"));
         return result.toString();
     }
 
+    /**
+     * @see org.apache.log4j.Layout#getHeader()
+     */
     @Override
     public String getHeader()
     {
-        return "<?xml version=\"1.0\"?>\n<log xmlns=\"http://aitools.org/programd/4.6/chatlog\">\n";
+        return String.format("<?xml version=\"1.0\"?>%n<log xmlns=\"http://aitools.org/programd/4.6/chatlog\">%n");
     }
-    
+
+    /**
+     * @see org.apache.log4j.Layout#getFooter()
+     */
     @Override
     public String getFooter()
     {

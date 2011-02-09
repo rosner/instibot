@@ -9,8 +9,7 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
@@ -19,11 +18,8 @@ import org.aitools.programd.processor.ProcessorException;
 import org.aitools.programd.util.Substituter;
 
 /**
- * <p>
  * Handles a substitution element.
- * </p>
  * 
- * @version 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 abstract public class SubstitutionProcessor extends AIMLProcessor
@@ -31,11 +27,11 @@ abstract public class SubstitutionProcessor extends AIMLProcessor
     /**
      * Creates a new SubstitutionProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public SubstitutionProcessor(Core coreToUse)
+    public SubstitutionProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
@@ -43,23 +39,24 @@ abstract public class SubstitutionProcessor extends AIMLProcessor
      * @param element the element to process
      * @param parser the parser in use
      * @return the result of processing the substitution element
-     * @throws ProcessorException 
+     * @throws ProcessorException
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
-    protected String process(Class<? extends Processor> processor, Element element, TemplateParser parser) throws ProcessorException
+    @SuppressWarnings("unchecked")
+    protected String process(Class<? extends Processor> processor, Element element, TemplateParser parser)
+            throws ProcessorException
     {
-        if (element.getChildNodes().getLength() > 0)
+        if (element.getContent().size() > 0)
         {
-            // Return the processed contents of the element, properly
-            // substituted.
-            return applySubstitutions(processor, parser.evaluate(element.getChildNodes()), parser.getBotID());
+            // Return the processed contents of the element, properly substituted.
+            return applySubstitutions(processor, parser.evaluate(element.getContent()), parser.getBotID());
         }
-        return parser.shortcutTag(element, element.getTagName(), StarProcessor.label, Node.ELEMENT_NODE);
+        return parser.shortcutTag(element, element.getName(), StarProcessor.label, Element.class);
     }
 
     /**
      * Applies each substitution in the given map to the input.
-     *
+     * 
      * @param processor the processor whose substitutions should be applied
      * @param string the string on which to perform the replacement
      * @param botid the bot whose substitutions should be applied
@@ -67,6 +64,6 @@ abstract public class SubstitutionProcessor extends AIMLProcessor
      */
     public String applySubstitutions(Class<? extends Processor> processor, String string, String botid)
     {
-        return Substituter.applySubstitutions(this.core.getBot(botid).getSubstitutionMap(processor), string);
+        return Substituter.applySubstitutions(this._core.getBot(botid).getSubstitutionMap(processor), string);
     }
 }

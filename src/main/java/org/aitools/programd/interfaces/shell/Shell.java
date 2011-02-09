@@ -10,7 +10,6 @@
 package org.aitools.programd.interfaces.shell;
 
 import java.io.BufferedReader;
-//import java.io.IOException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,46 +17,41 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+
+import org.aitools.programd.Bot;
+import org.aitools.programd.Bots;
 import org.aitools.programd.Core;
-import org.aitools.programd.bot.Bot;
-import org.aitools.programd.bot.Bots;
-import org.aitools.programd.multiplexor.PredicateMaster;
-import org.aitools.programd.util.DeveloperError;
+import org.aitools.programd.predicates.PredicateManager;
 import org.aitools.programd.util.ManagedProcess;
-import org.aitools.programd.util.UserError;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.util.runtime.Errors;
+import org.aitools.util.runtime.UserError;
+import org.aitools.util.xml.XHTML;
 import org.apache.log4j.Logger;
-import org.w3c.dom.Element;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.Namespace;
 
 /**
  * Provides a simple shell for interacting with the bot at a command line.
  * 
- * @author Jon Baer
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
+ * @author Jon Baer
  * @author Eion Robb
  */
 public class Shell extends Thread
 {
-    /** The string to use for an interactive console. */
-    public static final String PROMPT = "> ";
-
-    /** Shell exit command. */
-    private static final String EXIT = "/exit";
-
-    // Instance variables.
-
     /** The command registry. */
     private ShellCommandRegistry commandRegistry;
 
     /** The Core to which this Shell is attached. */
-    private Core core;
+    private Core _core;
 
     /** The PredicateMaster in use by the attached Core. */
-    private PredicateMaster predicateMaster;
+    private PredicateManager predicateMaster;
 
     /** The Bots object in use by the attached Core. */
     private Bots bots;
-    
+
     /** A BufferedReader for user input to the shell. */
     private BufferedReader inReader;
 
@@ -85,15 +79,14 @@ public class Shell extends Thread
     /** The host name. */
     private String hostname;
 
-    /**
-     * An indicator used to keep track of whether we're midline in a console
-     * output (i.e., showing a prompt).
-     */
+    /** An indicator used to keep track of whether we're midline in a console output (i.e., showing a prompt). */
     private boolean midLine = false;
     
+    private static final Namespace PLUGIN_CONFIG_NS = Namespace.getNamespace(Core.PLUGIN_CONFIG_NS_URI);
+
     /**
-     * A <code>Shell</code> with default input and output streams (
-     * <code>System.in</code> and <code>System.out</code>).
+     * A <code>Shell</code> with default input and output streams ( <code>System.in</code> and
+     * <code>System.out</code>).
      * 
      */
     public Shell()
@@ -125,38 +118,43 @@ public class Shell extends Thread
     /**
      * Attach this shell to the given core.
      * 
-     * @param coreToUse
+     * @param core
      */
-    public void attachTo(Core coreToUse)
+    @SuppressWarnings("unchecked")
+    public void attachTo(Core core)
     {
-        this.core = coreToUse;
-        this.botNamePredicate = this.core.getSettings().getBotNamePredicate();
-        this.predicateMaster = this.core.getPredicateMaster();
-        this.bots = this.core.getBots();
-        this.clientNamePredicate = this.core.getSettings().getClientNamePredicate();
-        this.hostname = this.core.getHostname();
-        
+        this._core = core;
+        this.botNamePredicate = this._core.getSettings().getBotNameProperty();
+        this.predicateMaster = this._core.getPredicateMaster();
+        this.bots = this._core.getBots();
+        this.clientNamePredicate = this._core.getSettings().getClientNamePredicate();
+        this.hostname = this._core.getHostname();
+
         this.commandRegistry = new ShellCommandRegistry();
-        
+
         // Look for any shell command plugins and add them to the registry.
-        Element shellCommandSet = XMLKit.getFirstElementNamed(this.core.getPluginConfig().getDocumentElement(), "shell-commands");
-        if (shellCommandSet != null)
+        Document plugins = this._core.getPluginConfig(); 
+        if (plugins != null)
         {
-            List<Element> commands = XMLKit.getAllElementsNamed(shellCommandSet, "command");
-            if (commands != null)
+            Element shellCommandSet = plugins.getRootElement().getChild("shell-commands", PLUGIN_CONFIG_NS);
+            if (shellCommandSet != null)
             {
-                for (Element commandElement : commands)
+                List<Element> commands = shellCommandSet.getChildren("command", PLUGIN_CONFIG_NS);
+                if (commands != null)
                 {
-                    String classname = commandElement.getAttribute("class");
-                    List<Element> parameterElements = XMLKit.getAllElementsNamed(commandElement, "parameter");
-                    if (parameterElements != null)
+                    for (Element commandElement : commands)
                     {
-                        HashMap<String, String> parameters = new HashMap<String, String>(parameterElements.size());
-                        for (Element parameter : parameterElements)
+                        String classname = commandElement.getAttributeValue("class");
+                        List<Element> parameterElements = commandElement.getChildren("parameter", PLUGIN_CONFIG_NS);
+                        if (parameterElements != null)
                         {
-                            parameters.put(parameter.getAttribute("name"), parameter.getAttribute("value"));
+                            HashMap<String, String> parameters = new HashMap<String, String>(parameterElements.size());
+                            for (Element parameter : parameterElements)
+                            {
+                                parameters.put(parameter.getAttributeValue("name"), parameter.getAttributeValue("value"));
+                            }
+                            this.commandRegistry.register(classname, parameters);
                         }
-                        this.commandRegistry.register(classname, parameters);
                     }
                 }
             }
@@ -169,21 +167,21 @@ public class Shell extends Thread
     @Override
     public void run()
     {
-        if (this.core == null)
+        if (this._core == null)
         {
-            throw new DeveloperError("Must attach the shell to a Core before calling run()!", new NullPointerException());
+            throw new NullPointerException("Must attach the shell to a Core before calling run()!");
         }
-        
-        showMessage("Interactive shell: type \"" + EXIT + "\" to shut down; \"" + HelpCommand.COMMAND_STRING + "\" for help.");
+
+        showMessage(String.format("Interactive shell: type \"/exit\" to shut down; \"%s\" for help.", HelpCommand.COMMAND_STRING));
         Bot bot = this.bots.getABot();
         if (bot == null)
         {
-            throw new UserError("No bot to talk to!", new NullPointerException());
+            throw new NullPointerException("No bot to talk to!");
         }
         this.botid = bot.getID();
         this.botName = bot.getPropertyValue(this.botNamePredicate);
 
-        while (true /*&& this.core.getStatus() == Core.Status.READY*/)
+        while (true /* && this.core.getStatus() == Core.Status.READY */)
         {
             showPrompt();
             String commandLine = null;
@@ -198,65 +196,70 @@ public class Shell extends Thread
             this.midLine = false;
 
             // Handle commands.
-            if (commandLine.indexOf('#') == 0)
+            if (commandLine != null)
             {
-                // Ignore this -- it's a comment.
-            }
-            else if (commandLine.indexOf('/') == 0)
-            {
-                // Exit command
-                if (commandLine.toLowerCase().equals(EXIT))
+                if (commandLine.indexOf('#') == 0)
                 {
-                    printExitMessage();
-                    this.core.shutdown();
-                    return;
+                    // Ignore this -- it's a comment.
                 }
-                // otherwise...
-                // Try to find a command to handle this.
-                ShellCommand command = null;
-                try
+                else if (commandLine.indexOf('/') == 0)
                 {
-                    command = this.commandRegistry.getHandlerFor(commandLine);
+                    // Exit command
+                    if ("/exit".toLowerCase().equals(commandLine))
+                    {
+                        printExitMessage();
+                        this._core.shutdown();
+                        return;
+                    }
+                    // otherwise...
+                    // Try to find a command to handle this.
+                    ShellCommand command = null;
                     try
                     {
-                        command.handle(commandLine, this);
+                        command = this.commandRegistry.getHandlerFor(commandLine);
+                        try
+                        {
+                            command.handle(commandLine, this);
+                        }
+                        catch (UserError e)
+                        {
+                            showError(String.format("Error processing command: \"%s\"", Errors.describe(e)));
+                        }
                     }
-                    catch (UserError e)
+                    catch (NoSuchCommandException e)
                     {
-                        showError("Error processing command: " + e.getMessage());
+                        // May be a commandable.
+                        try
+                        {
+                            commandCommandable(commandLine);
+                        }
+                        catch (NoCommandException ee)
+                        {
+                            showError("Please specify a command following the commandable.  For a list of commandables, type \""
+                                    + ListCommandablesCommand.COMMAND_STRING + "\".");
+                        }
+                        catch (NoSuchCommandableException ee)
+                        {
+                            showError("No such commandable is loaded.");
+                        }
                     }
                 }
-                catch (NoSuchCommandException e)
+                else if (commandLine.length() > 0)
                 {
-                    // May be a commandable.
-                    try
-                    {
-                        commandCommandable(commandLine);
-                    }
-                    catch (NoCommandException ee)
-                    {
-                        showError("Please specify a command following the commandable.  For a list of commandables, type \"" + ListCommandablesCommand.COMMAND_STRING + "\".");
-                    }
-                    catch (NoSuchCommandableException ee)
-                    {
-                        showError("No such commandable is loaded.");
-                    }
+                    showConsole(this.botName, XHTML.breakLines(this._core.getResponse(commandLine, this.hostname,
+                            this.botid)));
                 }
+                // If the command line has zero length, ignore it.
             }
-            else if (commandLine.length() > 0)
-            {
-                showConsole(this.botName, XMLKit.filterViaHTMLTags(this.core.getResponse(commandLine, this.hostname, this.botid)));
-            }
-            // If the command line has zero length, ignore it.
         }
     }
-    
+
     /**
      * Notes that the shell will not run, and sleeps.
      */
-    private void noShell()
+    protected void noShell()
     {
-        this.core.getLogger().warn("No input stream found; shell is disabled.");
+        this._core.getLogger().warn("No input stream found; shell is disabled.");
         while (true)
         {
             try
@@ -265,58 +268,53 @@ public class Shell extends Thread
             }
             catch (InterruptedException e)
             {
-                this.core.getLogger().warn("Shell was interrupted; shell will not run anymore.");
+                this._core.getLogger().warn("Shell was interrupted; shell will not run anymore.");
             }
         }
     }
-    
+
     /**
-     * Allows an external class to call a command 
-     * by sending a command line.  Prints the command
-     * line to the console so it's possible to see
-     * what was attempted.
+     * Allows an external class to call a command by sending a command line. Prints the command line to the console so
+     * it's possible to see what was attempted.
      * 
      * @param commandLine the command line to process
      * @throws NoSuchCommandException if the command line did not contain a command that could be processed
      */
     public void processCommandLine(String commandLine) throws NoSuchCommandException
     {
-        this.consolePrompt.println(this.hostname + PROMPT + commandLine);
+        this.consolePrompt.println(String.format("%s> %s", this.hostname, commandLine));
         this.commandRegistry.getHandlerFor(commandLine).handle(commandLine, this);
     }
 
     /**
      * Displays a prompt.
      */
-    private void showPrompt()
+    protected void showPrompt()
     {
         if (this.getState() != Thread.State.NEW)
         {
-            promptConsole('[' + this.botName + "] " + this.predicateMaster.get(this.clientNamePredicate, this.hostname, this.botid).trim());
+            promptConsole('[' + this.botName + "] "
+                    + this.predicateMaster.get(this.clientNamePredicate, this.hostname, this.botid).trim());
         }
     }
 
     /**
-     * <p>
      * Displays a line for an interactive console, including the prompt.
-     * </p>
      * 
      * @param preprompt the text to show before the prompt
      */
-    private void promptConsole(String preprompt)
+    protected void promptConsole(String preprompt)
     {
         if (this.midLine)
         {
             this.consolePrompt.println();
         }
-        this.consolePrompt.print(preprompt + PROMPT);
+        this.consolePrompt.print(String.format("%s> ", preprompt));
         this.midLine = true;
     }
 
     /**
-     * <p>
      * Displays a regular message (no prompt) in an interactive console.
-     * </p>
      * 
      * @param message the message to display
      */
@@ -326,9 +324,7 @@ public class Shell extends Thread
     }
 
     /**
-     * <p>
      * Displays an error message (no prompt) in an interactive console.
-     * </p>
      * 
      * @param message the message to display
      */
@@ -338,18 +334,16 @@ public class Shell extends Thread
     }
 
     /**
-     * <p>
      * Displays a multi-line message (after a prompt) in an interactive console.
-     * </p>
      * 
      * @param preprompt the text to show before the prompt
      * @param message the multi-line message to display
      */
-    private void showConsole(String preprompt, String[] message)
+    protected void showConsole(String preprompt, String[] message)
     {
         for (int index = 0; index < message.length; index++)
         {
-            printlnOut(preprompt + PROMPT + message[index]);
+            printlnOut(String.format("%s> %s", preprompt, message[index]));
         }
     }
 
@@ -384,8 +378,7 @@ public class Shell extends Thread
     }
 
     /**
-     * Tells the Shell that something else was printed to the console; not
-     * midLine anymore.
+     * Tells the Shell that something else was printed to the console; not midLine anymore.
      */
     public void gotLine()
     {
@@ -395,7 +388,7 @@ public class Shell extends Thread
     /**
      * Prints an exit message.
      */
-    private void printExitMessage()
+    protected void printExitMessage()
     {
         Logger.getLogger("programd").info("Exiting at user request.");
     }
@@ -407,15 +400,15 @@ public class Shell extends Thread
     {
         return this.botid;
     }
-    
+
     /**
      * @return the Core in use
      */
     public Core getCore()
     {
-        return this.core;
+        return this._core;
     }
-    
+
     /**
      * @return the command registry
      */
@@ -423,7 +416,7 @@ public class Shell extends Thread
     {
         return this.commandRegistry.getValues();
     }
-    
+
     /**
      * @return the Bots object used by this shell
      */
@@ -439,17 +432,17 @@ public class Shell extends Thread
      */
     public void switchToBot(String newBotID)
     {
-        if (!this.bots.include(newBotID))
+        if (!this.bots.containsKey(newBotID))
         {
             showError("That bot id is not known. Check your startup files.");
             return;
         }
         this.botid = newBotID;
-        this.botName = this.bots.getBot(newBotID).getPropertyValue(this.botNamePredicate);
+        this.botName = this.bots.get(newBotID).getPropertyValue(this.botNamePredicate);
         showMessage("Switched to bot \"" + newBotID + "\" (name: \"" + this.botName + "\").");
         // Send the connect string and print the first response.
-        showConsole(this.botName, XMLKit.filterViaHTMLTags(this.core.getResponse(this.core.getSettings().getConnectString(), this.hostname,
-                this.botid)));
+        showConsole(this.botName, XHTML.breakLines(this._core.getResponse(this._core.getSettings()
+                .getConnectString(), this.hostname, this.botid)));
     }
 
     /**
@@ -459,23 +452,23 @@ public class Shell extends Thread
      * @throws NoCommandException if no command is given
      * @throws NoSuchCommandableException if an invalid commandable is specified
      */
-    private void commandCommandable(String command) throws NoCommandException, NoSuchCommandableException
+    protected void commandCommandable(String command) throws NoCommandException, NoSuchCommandableException
     {
         // Parse out the commandable.
         int space = command.indexOf(' ');
         if (space == -1)
         {
-            throw new NoCommandException();
+            throw new Shell.NoCommandException();
         }
         if (space == command.length())
         {
-            throw new NoCommandException();
+            throw new Shell.NoCommandException();
         }
 
         String commandableID = command.substring(1, space);
         ShellCommandable commandable = null;
 
-        for (ManagedProcess process : this.core.getManagedProcesses().values())
+        for (ManagedProcess process : this._core.getManagedProcesses().values())
         {
             if (process instanceof ShellCommandable)
             {
@@ -488,7 +481,7 @@ public class Shell extends Thread
         }
         if (commandable == null)
         {
-            throw new NoSuchCommandableException();
+            throw new Shell.NoSuchCommandableException();
         }
         commandable.processShellCommand(command.substring(space + 1));
     }
@@ -496,7 +489,7 @@ public class Shell extends Thread
     /**
      * An exception thrown if no command is specified.
      */
-    private class NoCommandException extends Exception
+    public class NoCommandException extends Exception
     {
         // No body.
     }
@@ -504,7 +497,7 @@ public class Shell extends Thread
     /**
      * An exception thrown if an invalid commandable is specified.
      */
-    private class NoSuchCommandableException extends Exception
+    public class NoSuchCommandableException extends Exception
     {
         // No body.
     }

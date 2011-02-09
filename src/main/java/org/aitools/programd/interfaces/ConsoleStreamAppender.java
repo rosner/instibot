@@ -19,11 +19,9 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 
 /**
- * A <code>ConsoleStreamAppender</code> publishes any record it's passed to the
- * given <code>stream</code>.
+ * A <code>ConsoleStreamAppender</code> publishes any record it's passed to the given <code>stream</code>.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class ConsoleStreamAppender extends WriterAppender
 {
@@ -55,6 +53,8 @@ public class ConsoleStreamAppender extends WriterAppender
 
     /**
      * Publishes the given record, also to the shell if one is attached.
+     * 
+     * @param event 
      */
     @Override
     public void doAppend(LoggingEvent event)
@@ -65,10 +65,10 @@ public class ConsoleStreamAppender extends WriterAppender
             this.shell.gotLine();
         }
     }
-    
+
     /**
-     * Specifies whether or not to print stack traces for &quot;caught&quot;
-     * exceptions (for uncaught exceptions, see {@link org.aitools.programd.CoreSettings}).
+     * Specifies whether or not to print stack traces for &quot;caught&quot; exceptions (for uncaught exceptions, see
+     * {@link org.aitools.programd.CoreSettings}).
      * 
      * @param value whether or not to print stack traces for &quot;caught&quot; exceptions
      */
@@ -78,8 +78,7 @@ public class ConsoleStreamAppender extends WriterAppender
     }
 
     /**
-     * Overrides this method of the parent class so that it will not print stack
-     * traces if it isn't supposed to.
+     * Overrides this method of the parent class so that it will not print stack traces if it isn't supposed to.
      * 
      * @see org.apache.log4j.WriterAppender#subAppend(org.apache.log4j.spi.LoggingEvent)
      */
@@ -107,20 +106,20 @@ public class ConsoleStreamAppender extends WriterAppender
         }
         else
         {
-        	ThrowableInformation ti = event.getThrowableInformation();
-        	if (ti != null)
-        	{
-        		Throwable t = ti.getThrowable();
-        		if (t != null)
-        		{
-        			String message = t.getMessage();
-        			if (message != null)
-        			{
-        	            this.qw.write(event.getThrowableInformation().getThrowable().getMessage());
-        	            this.qw.write(Layout.LINE_SEP);
-        			}
-        		}
-        	}
+            ThrowableInformation ti = event.getThrowableInformation();
+            if (ti != null)
+            {
+                Throwable t = ti.getThrowable();
+                if (t != null)
+                {
+                    String message = t.getMessage();
+                    if (message != null)
+                    {
+                        this.qw.write(event.getThrowableInformation().getThrowable().getMessage());
+                        this.qw.write(Layout.LINE_SEP);
+                    }
+                }
+            }
         }
 
         if (this.immediateFlush)
@@ -129,6 +128,9 @@ public class ConsoleStreamAppender extends WriterAppender
         }
     }
 
+    /**
+     * @param stream
+     */
     public synchronized void setWriter(OutputStream stream)
     {
         super.setWriter(createWriter(stream));

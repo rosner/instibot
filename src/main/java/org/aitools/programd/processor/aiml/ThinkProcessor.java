@@ -9,18 +9,15 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-think">think</a></code>
- * element.
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-think">think</a></code> element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
@@ -33,20 +30,21 @@ public class ThinkProcessor extends AIMLProcessor
     /**
      * Creates a new ThinkProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public ThinkProcessor(Core coreToUse)
+    public ThinkProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
-        parser.evaluate(element.getChildNodes());
-        return EMPTY_STRING;
+        parser.evaluate(element.getContent());
+        return "";
     }
 }

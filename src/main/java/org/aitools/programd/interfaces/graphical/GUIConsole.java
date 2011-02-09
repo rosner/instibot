@@ -46,41 +46,34 @@ import javax.swing.SwingConstants;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.aitools.programd.Core;
-import org.aitools.programd.graph.Graphmaster;
+import org.aitools.programd.graph.Graphmapper;
 import org.aitools.programd.interfaces.Console;
 import org.aitools.programd.interfaces.shell.BotListCommand;
 import org.aitools.programd.interfaces.shell.HelpCommand;
 import org.aitools.programd.interfaces.shell.ListBotFilesCommand;
 import org.aitools.programd.interfaces.shell.NoSuchCommandException;
 import org.aitools.programd.interfaces.shell.Shell;
-import org.aitools.programd.util.DeveloperError;
-import org.aitools.programd.util.FileManager;
-import org.aitools.programd.util.URLTools;
+import org.aitools.util.runtime.DeveloperError;
+import org.aitools.util.resource.Filesystem;
+import org.aitools.util.resource.URLTools;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 /**
  * Provides a very simple GUI console for the bot.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.1.5
- * @version 4.5
  */
 public class GUIConsole extends JPanel
 {
-    protected static final String PACKAGE_NAME = GUIConsole.class.getPackage().getName().replaceAll("\\.", "/");
-    
-    protected PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
     /** The core associated with this console. */
-    private Core core;
+    private Core _core;
 
     /** The underlying Console. */
-    protected Console console;
+    private Console console;
 
     /** The Shell that will (may) be used by the underlying console. */
-    protected Shell shell;
+    protected Shell _shell;
 
     /** Where console messages will be displayed. */
     protected JTextArea display;
@@ -109,15 +102,15 @@ public class GUIConsole extends JPanel
     /** For convenience, the system line separator. */
     protected static final String LINE_SEPARATOR = System.getProperty("line.separator", "\n");
 
-    private static final Object[] HELP_MESSAGE = { "Simple Console for", "Program D version " + Core.VERSION };
+    private static final Object[] HELP_MESSAGE = { "Simple Console for Program D" };
 
     private static JMenuBar menuBar;
 
-    private static String LOGO_PATH = "logo.jpg";
+    private static String LOGO_PATH = "resources/icons/logo.jpg";
 
     private ImageIcon logo;
 
-    private static String ICON_PATH = "icon.jpg";
+    private static String ICON_PATH = "resources/icons/icon.jpg";
 
     private ImageIcon icon;
 
@@ -150,44 +143,37 @@ public class GUIConsole extends JPanel
         URL logoURL;
         try
         {
-            
-            Resource resource = resourcePatternResolver.getResource("classpath:" + PACKAGE_NAME + "/" + LOGO_PATH);
-            logoURL = resource.getURL();//URLTools.createValidURL(LOGO_PATH, FileManager.getWorkingDirectory());
+            logoURL = URLTools.createValidURL(LOGO_PATH, Filesystem.getWorkingDirectory());
         }
         catch (FileNotFoundException e)
         {
-            throw new DeveloperError("Logo is missing from \"" + LOGO_PATH + "\"!", e);
-        } catch (IOException e) {
-            throw new DeveloperError("Logo is missing from \"" + LOGO_PATH + "\"!", e);	}
+            throw new DeveloperError(String.format("Logo is missing from \"%s\"!", LOGO_PATH), e);
+        }
         if (logoURL != null)
         {
             this.logo = new ImageIcon(logoURL);
         }
         else
         {
-            throw new DeveloperError("Logo is missing from \"" + LOGO_PATH + "\"!", new NullPointerException());
+            throw new NullPointerException(String.format("Logo is missing from \"%s\"!", LOGO_PATH));
         }
 
         URL iconURL;
         try
         {
-            Resource resource = resourcePatternResolver.getResource("classpath:" + PACKAGE_NAME + "/" + ICON_PATH);   
-            iconURL = resource.getURL();// URLTools.createValidURL(ICON_PATH, FileManager.getWorkingDirectory());
+            iconURL = URLTools.createValidURL(ICON_PATH, Filesystem.getWorkingDirectory());
         }
         catch (FileNotFoundException e)
         {
-            throw new DeveloperError("Icon is missing from \"" + ICON_PATH + "\"!", e);
-        } catch (IOException e) {
-	    // TODO Auto-generated catch block
-            throw new DeveloperError("Icon is missing from \"" + ICON_PATH + "\"!", e);
-	}
+            throw new DeveloperError(String.format("Icon is missing from \"%s\"!", ICON_PATH), e);
+        }
         if (iconURL != null)
         {
             this.icon = new ImageIcon(iconURL);
         }
         else
         {
-            throw new DeveloperError("Icon is missing from \"" + ICON_PATH + "\"!", new NullPointerException());
+            throw new NullPointerException(String.format("Icon is missing from \"%s\"!", ICON_PATH));
         }
 
         this.console = new Console(this.outStream, this.errStream);
@@ -312,7 +298,7 @@ public class GUIConsole extends JPanel
             {
                 try
                 {
-                    GUIConsole.this.shell.processCommandLine(ListBotFilesCommand.COMMAND_STRING);
+                    GUIConsole.this._shell.processCommandLine(ListBotFilesCommand.COMMAND_STRING);
                 }
                 catch (NoSuchCommandException e)
                 {
@@ -331,7 +317,7 @@ public class GUIConsole extends JPanel
             {
                 try
                 {
-                    GUIConsole.this.shell.processCommandLine(BotListCommand.COMMAND_STRING);
+                    GUIConsole.this._shell.processCommandLine(BotListCommand.COMMAND_STRING);
                 }
                 catch (NoSuchCommandException e)
                 {
@@ -362,7 +348,7 @@ public class GUIConsole extends JPanel
             {
                 try
                 {
-                    GUIConsole.this.shell.processCommandLine(HelpCommand.COMMAND_STRING);
+                    GUIConsole.this._shell.processCommandLine(HelpCommand.COMMAND_STRING);
                 }
                 catch (NoSuchCommandException e)
                 {
@@ -404,16 +390,16 @@ public class GUIConsole extends JPanel
     /**
      * Attaches the GUIConsole to the given Core.
      * 
-     * @param coreToUse the Core to which to attach
+     * @param core the Core to which to attach
      */
-    public void attachTo(Core coreToUse)
+    public void attachTo(Core core)
     {
-        this.core = coreToUse;
-        this.console.attachTo(this.core);
-        if (this.core.getSettings().consoleUseShell())
+        this._core = core;
+        this.console.attachTo(this._core);
+        if (this._core.getSettings().useShell())
         {
-            this.shell = new Shell(this.inStream, this.outStream, this.errStream, this.promptStream);
-            this.console.addShell(this.shell, coreToUse);
+            this._shell = new Shell(this.inStream, this.outStream, this.errStream, this.promptStream);
+            this.console.addShell(this._shell, core);
         }
         else
         {
@@ -426,14 +412,14 @@ public class GUIConsole extends JPanel
      */
     public void start()
     {
-        //this.core.start();
+        // this.core.start();
     }
 
     protected void shutdown()
     {
-        if (this.core != null)
+        if (this._core != null)
         {
-            this.core.shutdown();
+            this._core.shutdown();
         }
         // Let the user exit, in case termination was abnormal or messages are
         // otherwise interesting.
@@ -455,16 +441,16 @@ public class GUIConsole extends JPanel
         /** The enter button. */
         protected JButton enter;
 
-        protected GUIConsole parent;
+        protected GUIConsole _parent;
 
         /**
          * Creates a new InputPanel.
          * 
-         * @param parentToUse the parent GUIConsole to use
+         * @param parent the parent GUIConsole to use
          */
-        public InputPanel(GUIConsole parentToUse)
+        public InputPanel(GUIConsole parent)
         {
-            this.parent = parentToUse;
+            this._parent = parent;
 
             this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
@@ -483,10 +469,10 @@ public class GUIConsole extends JPanel
             this.input.setMaximumSize(new Dimension(Short.MAX_VALUE, 20));
             this.input.setHorizontalAlignment(SwingConstants.LEFT);
             this.input.setAlignmentY(Component.CENTER_ALIGNMENT);
-            this.input.addActionListener(new InputSender());
+            this.input.addActionListener(new InputPanel.InputSender());
 
             this.enter = new JButton("Enter");
-            //this.enter.setFont(new Font("Sans-serif", Font.PLAIN, 10));
+            // this.enter.setFont(new Font("Sans-serif", Font.PLAIN, 10));
             this.enter.setForeground(Color.black);
             this.enter.setMinimumSize(new Dimension(70, 20));
             this.enter.setPreferredSize(new Dimension(70, 20));
@@ -523,7 +509,10 @@ public class GUIConsole extends JPanel
             this.enter.setEnabled(enabled);
         }
 
-        private class InputSender implements ActionListener
+        /**
+         * Displays a new user input and clears the input box.
+         */
+        public class InputSender implements ActionListener
         {
             /**
              * @see ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -545,17 +534,17 @@ public class GUIConsole extends JPanel
     {
         private boolean paused = false;
 
-        protected GUIConsole parent;
+        protected GUIConsole _parent;
 
         /**
          * Creates a new ConsoleDisplayStream.
          * 
-         * @param parentToUse the GUIConsole parent to use
+         * @param parent the GUIConsole parent to use
          */
-        public ConsoleDisplayStream(GUIConsole parentToUse)
+        public ConsoleDisplayStream(GUIConsole parent)
         {
             super();
-            this.parent = parentToUse;
+            this._parent = parent;
         }
 
         /**
@@ -611,15 +600,15 @@ public class GUIConsole extends JPanel
      */
     public class ConsolePromptStream extends OutputStream
     {
-        protected GUIConsole parent;
+        protected GUIConsole _parent;
 
         /**
-         * @param parentToUse
+         * @param parent
          */
-        public ConsolePromptStream(GUIConsole parentToUse)
+        public ConsolePromptStream(GUIConsole parent)
         {
             super();
-            this.parent = parentToUse;
+            this._parent = parent;
         }
 
         /**
@@ -642,8 +631,7 @@ public class GUIConsole extends JPanel
     }
 
     /**
-     * Extends InputStream to suit our purposes in handling user input for the
-     * GUIConsole.
+     * Extends InputStream to suit our purposes in handling user input for the GUIConsole.
      * 
      * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
      */
@@ -691,7 +679,7 @@ public class GUIConsole extends JPanel
             }
             if (b == null)
             {
-                throw new NullPointerException();
+                throw new NullPointerException("Cannot read from console.");
             }
             else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0))
             {
@@ -763,18 +751,19 @@ public class GUIConsole extends JPanel
 
     protected void loadAIMLURLBox()
     {
-        Object response = JOptionPane.showInputDialog(null, "Enter the URL from which to load.", "Load AIML from URL", JOptionPane.PLAIN_MESSAGE,
-                null, null, null);
+        Object response = JOptionPane.showInputDialog(null, "Enter the URL from which to load.", "Load AIML from URL",
+                JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (response == null)
         {
             return;
         }
 
-        Graphmaster graphmaster = this.core.getGraphmaster();
-        int categories = graphmaster.getCategoryCount();
-        this.core.load(URLTools.contextualize(FileManager.getWorkingDirectory(), (String) response), this.shell.getCurrentBotID());
+        Graphmapper graphmapper = this._core.getGraphmapper();
+        int categories = graphmapper.getCategoryCount();
+        this._core.load(URLTools.contextualize(Filesystem.getWorkingDirectory(), (String) response), this._shell
+                .getCurrentBotID());
         Logger.getLogger("programd").log(Level.INFO,
-                graphmaster.getCategoryCount() - categories + " categories loaded from \"" + (String) response + "\".");
+                graphmapper.getCategoryCount() - categories + " categories loaded from \"" + (String) response + "\".");
     }
 
     protected void loadAIMLFilePathChooser()
@@ -795,22 +784,23 @@ public class GUIConsole extends JPanel
             {
                 return;
             }
-            int categories = this.core.getGraphmaster().getCategoryCount();
-            Graphmaster graphmaster = this.core.getGraphmaster();
-            this.core.load(URLTools.contextualize(FileManager.getWorkingDirectory(), newPath), this.shell.getCurrentBotID());
+            int categories = this._core.getGraphmapper().getCategoryCount();
+            Graphmapper graphmapper = this._core.getGraphmapper();
+            this._core.load(URLTools.contextualize(Filesystem.getWorkingDirectory(), newPath), this._shell
+                    .getCurrentBotID());
             Logger.getLogger("programd").log(Level.INFO,
-                    graphmaster.getCategoryCount() - categories + " categories loaded from \"" + newPath + "\".");
+                    graphmapper.getCategoryCount() - categories + " categories loaded from \"" + newPath + "\".");
         }
     }
 
     protected void chooseBot()
     {
-        String[] botIDs = this.core.getBots().getIDs().toArray(new String[] {});
+        String[] botIDs = this._core.getBots().keySet().toArray(new String[] {});
         ListDialog.initialize(this.frame, botIDs, "Choose a bot", "Choose the bot with whom you want to talk.");
-        String choice = ListDialog.showDialog(null, this.shell.getCurrentBotID());
+        String choice = ListDialog.showDialog(null, this._shell.getCurrentBotID());
         if (choice != null)
         {
-            this.shell.switchToBot(choice);
+            this._shell.switchToBot(choice);
         }
     }
 

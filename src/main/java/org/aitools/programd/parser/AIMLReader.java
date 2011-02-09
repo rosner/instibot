@@ -16,79 +16,26 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.ext.DefaultHandler2;
 
-import org.aitools.programd.bot.Bot;
-import org.aitools.programd.graph.Graphmaster;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.programd.Bot;
+import org.aitools.programd.graph.Graphmapper;
+import org.aitools.programd.processor.aiml.AIMLProcessorRegistry;
+import org.aitools.util.xml.Characters;
+import org.aitools.util.xml.SAX;
 
 /**
- * <p>
- * This reads in standard AIML and delivers categories to the Graphmaster.
- * </p>
- * <p>
- * This has been rewritten starting with 4.2 to use SAX.
- * </p>
+ * This reads in standard AIML and delivers categories to the Graphmapper.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @version 4.5
  */
 public class AIMLReader extends DefaultHandler2
 {
-    private String defaultNamespaceURI;
-    
-    private Graphmaster graphmaster;
-    
-    private URL path;
-    
-    private String botid;
-    
-    private Bot bot;
+    private String _defaultNamespaceURI;
 
-    /*
-     * Constants used in parsing.
-     */
+    private Graphmapper _graphmapper;
 
-    /** The start of a tag marker. */
-    private static final String MARKER_START = "<";
+    private URL _path;
 
-    /** The end of a tag marker. */
-    private static final String MARKER_END = ">";
-
-    /** An empty string. */
-    private static final String EMPTY_STRING = "";
-
-    private static final String OPEN_TEMPLATE_START_TAG = "<template xmlns=\"";
-
-    private static final String QUOTE_MARKER_END = "\">";
-
-    /** A slash. */
-    private static final String SLASH = "/";
-
-    /** End of a template element. */
-    private static final String TEMPLATE_END_TAG = "</template>";
-
-    /** The system line separator. */
-    protected static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String PATTERN = "pattern";
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String BOT = "bot";
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String THAT = "that";
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String TOPIC = "topic";
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String TEMPLATE = "template";
-    
-    /** The wildcard (&quot;*&quot;). */
-    private static final String WILDCARD = "*";
-
-    /** The string &quot;{@value}&quot;. */
-    private static final String NAME = "name";
+    private Bot _bot;
 
     /** The most recently collected &lt;pattern&gt;&lt;/pattern&gt; contents. */
     private StringBuilder patternBuffer;
@@ -98,7 +45,7 @@ public class AIMLReader extends DefaultHandler2
 
     /** The most recently collected &lt;template&gt;&lt;/template&gt; contents. */
     private StringBuilder templateBuffer;
-    
+
     /** A pointer to the current buffer. */
     private StringBuilder currentBuffer;
 
@@ -120,22 +67,17 @@ public class AIMLReader extends DefaultHandler2
     /**
      * Creates a new AIMLReader.
      * 
-     * @param graphmasterToUse the graphmaster into which new categories are to be loaded.
-     * @param url the path that is being read
-     * @param botidToUse the id of the bot into whom categories are being loaded
-     * @param botToUse the bot itself
-     * @param defaultNamespaceURIToUse the namespace URI to use when none other
-     *            is specified (?)
+     * @param graphmapper the <code>Graphmapper</code> into which new categories are to be loaded.
+     * @param path the path that is being read
+     * @param bot the bot itself
      */
-    public AIMLReader(Graphmaster graphmasterToUse, URL url, String botidToUse, Bot botToUse, String defaultNamespaceURIToUse)
+    public AIMLReader(Graphmapper graphmapper, URL path, Bot bot)
     {
-        this.graphmaster = graphmasterToUse;
-        this.path = url;
-        this.botid = botidToUse;
-        this.bot = botToUse;
-        this.defaultNamespaceURI = defaultNamespaceURIToUse;
-        this.templateStartTag = OPEN_TEMPLATE_START_TAG + defaultNamespaceURIToUse + QUOTE_MARKER_END;
-        this.topic = WILDCARD;
+        this._graphmapper = graphmapper;
+        this._path = path;
+        this._bot = bot;
+        this.templateStartTag = String.format("<template xmlns=\"%s\">", AIMLProcessorRegistry.XMLNS);
+        this.topic = "*";
     }
 
     /**
@@ -146,7 +88,7 @@ public class AIMLReader extends DefaultHandler2
     {
         if (this.currentBuffer != null)
         {
-            this.currentBuffer.append(XMLKit.escapeXMLChars(ch, start, length));
+            this.currentBuffer.append(Characters.escapeXMLChars(ch, start, length));
         }
     }
 
@@ -157,7 +99,7 @@ public class AIMLReader extends DefaultHandler2
     public void startCDATA()
     {
         assert this.currentBuffer != null : "Got CDATA start outside of a known element!";
-        this.currentBuffer.append(XMLKit.CDATA_START);
+        this.currentBuffer.append("<![CDATA[");
     }
 
     /**
@@ -167,18 +109,18 @@ public class AIMLReader extends DefaultHandler2
     public void endCDATA()
     {
         assert this.currentBuffer != null : "Got CDATA end outside of a known element!";
-        this.currentBuffer.append(XMLKit.CDATA_END);
+        this.currentBuffer.append("]]>");
     }
 
     /**
-     * @see org.xml.sax.ContentHandler#startElement(java.lang.String,
-     *      java.lang.String, java.lang.String, org.xml.sax.Attributes)
+     * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String,
+     *      org.xml.sax.Attributes)
      */
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
     {
         String elementName;
-        if (localName.equals(EMPTY_STRING))
+        if ("".equals(localName))
         {
             elementName = qName;
         }
@@ -186,48 +128,48 @@ public class AIMLReader extends DefaultHandler2
         {
             elementName = localName;
         }
-        if (elementName.equals(PATTERN))
+        if (elementName.equals("pattern"))
         {
             this.currentBuffer = this.patternBuffer = new StringBuilder();
         }
-        else if (elementName.equals(BOT) && this.currentBuffer != null && this.currentBuffer == this.patternBuffer)
+        else if (elementName.equals("bot") && this.currentBuffer != null && this.currentBuffer == this.patternBuffer)
         {
             // Insert the value of the given bot predicate (no warning if doesn't exist!).
-            this.patternBuffer.append(this.bot.getPropertyValue(attributes.getValue(NAME)));
+            this.patternBuffer.append(this._bot.getPropertyValue(attributes.getValue("name")));
         }
-        else if (elementName.equals(THAT) && this.currentBuffer == null || this.currentBuffer != this.templateBuffer)
+        else if (elementName.equals("that") && this.currentBuffer == null || this.currentBuffer != this.templateBuffer)
         {
             this.currentBuffer = this.thatBuffer = new StringBuilder();
         }
-        else if (elementName.equals(TEMPLATE))
+        else if (elementName.equals("template"))
         {
             this.currentBuffer = this.templateBuffer = new StringBuilder();
         }
         else if (this.currentBuffer != null && this.currentBuffer == this.templateBuffer)
         {
-            /* We don't want to parse the template into
-             * some big memory structure, since it may never be used. So
-             * we just reconstitute the XML text for later
-             * processing.
+            /*
+             * We don't want to parse the template into some big memory structure, since it may never be used. So we
+             * just reconstitute the XML text for later processing.
              */
-            this.templateBuffer.append(XMLKit.renderStartTag(elementName, attributes, !uri.equals(this.defaultNamespaceURI), uri));
+            this.templateBuffer.append(SAX.renderStartTag(elementName, attributes, !uri
+                    .equals(this._defaultNamespaceURI), uri));
         }
-        else if (elementName.equals(TOPIC))
+        else if (elementName.equals("topic"))
         {
             // We don't check that it's valid, because it's supposed to have been schema-validated already!
-            this.topic = attributes.getValue(NAME);
+            this.topic = attributes.getValue("name");
         }
     }
 
     /**
-     * @see org.xml.sax.ContentHandler#endElement(java.lang.String,
-     *      java.lang.String, java.lang.String)
+     * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
      */
     @Override
-    public void endElement(@SuppressWarnings("unused") String uri, String localName, String qName)
+    @SuppressWarnings({"unused","boxing"})
+    public void endElement(String uri, String localName, String qName)
     {
         String elementName;
-        if (localName.equals(EMPTY_STRING))
+        if ("".equals(localName))
         {
             elementName = qName;
         }
@@ -246,12 +188,13 @@ public class AIMLReader extends DefaultHandler2
             this.that = this.thatBuffer.toString();
             this.currentBuffer = null;
         }
-        else if (elementName.equals(TEMPLATE))
+        else if (elementName.equals("template"))
         {
             // Whitespace-normalize the template contents.
-            this.template = this.templateStartTag + this.templateBuffer.toString() + TEMPLATE_END_TAG;
-            // Finally, deliver the newly defined category to the Graphmaster.
-            this.graphmaster.addCategory(this.pattern, this.that, this.topic, this.template, this.botid, this.bot, this.path);
+            this.template = String.format("%s%s</template>", this.templateStartTag, this.templateBuffer.toString());
+            // Finally, deliver the newly defined category to the Graphmapper.
+            this._graphmapper.addCategory(this.pattern, this.that, this.topic, this.template, this._bot,
+                    this._path);
             // Reset the pattern, that and template.
             this.pattern = this.that = this.template = null;
             this.currentBuffer = this.patternBuffer = this.thatBuffer = this.templateBuffer = null;
@@ -264,14 +207,14 @@ public class AIMLReader extends DefaultHandler2
             // Get the template length (just once).
             int templateLength = this.templateBuffer.length();
             // If the last char of the template string is a '>',
-            if (this.templateBuffer.substring(templateLength - 1).equals(MARKER_END))
+            if (this.templateBuffer.substring(templateLength - 1).equals('>'))
             {
                 // and if the next to last char is *not* a '/',
-                if (!this.templateBuffer.substring(templateLength - 2, templateLength - 1).equals(SLASH))
+                if (!this.templateBuffer.substring(templateLength - 2, templateLength - 1).equals('/'))
                 {
                     // then if the name of the last tag is the same as this one,
                     // this is an empty element.
-                    int lastMarkerStart = this.templateBuffer.lastIndexOf(MARKER_START);
+                    int lastMarkerStart = this.templateBuffer.lastIndexOf("<");
                     if (this.templateBuffer.indexOf(elementName, lastMarkerStart) == lastMarkerStart + 1)
                     {
                         // So just insert a '/' before the '>'.
@@ -283,14 +226,12 @@ public class AIMLReader extends DefaultHandler2
             // Otherwise, make a closing tag.
             if (makeClosingTag)
             {
-                this.templateBuffer.append(MARKER_START);
-                this.templateBuffer.append('/' + elementName);
-                this.templateBuffer.append(MARKER_END);
+                this.templateBuffer.append(String.format("</%s>", elementName));
             }
         }
-        else if (elementName.equals(TOPIC))
+        else if (elementName.equals("topic"))
         {
-            this.topic = WILDCARD;
+            this.topic = "*";
         }
     }
 

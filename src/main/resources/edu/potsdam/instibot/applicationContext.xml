@@ -12,6 +12,11 @@
 
 	<util:properties id="propertyBean" location="classpath:edu/potsdam/instibot/application.properties" />
 
+    <context:component-scan base-package="edu.potsdam.instibot.rest" />
+    
+    <!-- Insert the bot handling bean here and that's all
+    <bean id="apiService" class="edu.potsdam.instibot.api.Test" />
+	-->
 	<context:annotation-config />
 
 </beans>

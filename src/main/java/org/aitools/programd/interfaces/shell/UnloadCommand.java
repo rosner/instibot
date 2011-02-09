@@ -11,9 +11,9 @@ package org.aitools.programd.interfaces.shell;
 
 import java.io.FileNotFoundException;
 
-import org.aitools.programd.bot.Bot;
-import org.aitools.programd.graph.Graphmaster;
-import org.aitools.programd.util.URLTools;
+import org.aitools.programd.Bot;
+import org.aitools.programd.graph.Graphmapper;
+import org.aitools.util.resource.URLTools;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,8 +49,7 @@ public class UnloadCommand extends ShellCommand
     }
 
     /**
-     * Attempts to unload the file named on the command line from the
-     * Graphmaster.
+     * Attempts to unload the file named on the command line from the Graphmapper.
      * 
      * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String,
      *      org.aitools.programd.interfaces.shell.Shell)
@@ -66,15 +65,16 @@ public class UnloadCommand extends ShellCommand
         }
         else
         {
-            Graphmaster graphmaster = shell.getCore().getGraphmaster();
-            int categories = graphmaster.getCategoryCount();
-            Bot bot = shell.getBots().getBot(shell.getCurrentBotID());
+            Graphmapper graphmapper = shell.getCore().getGraphmapper();
+            int categories = graphmapper.getCategoryCount();
+            Bot bot = shell.getBots().get(shell.getCurrentBotID());
             String path = commandLine.substring(space + 1);
             try
             {
-                graphmaster.unload(URLTools.createValidURL(path), bot);
+                graphmapper.unload(URLTools.createValidURL(path), bot);
                 bot.getLoadedFilesMap().remove(path);
-                Logger.getLogger("programd").info(categories - graphmaster.getCategoryCount() + " categories unloaded.");
+                Logger.getLogger("programd")
+                        .info(categories - graphmapper.getCategoryCount() + " categories unloaded.");
             }
             catch (FileNotFoundException e)
             {

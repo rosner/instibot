@@ -9,17 +9,14 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 
 /**
- * Handles an
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-id">id</a></code>
- * element.
+ * Handles an <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-id">id</a></code> element.
  * 
- * @version 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class IDProcessor extends AIMLProcessor
@@ -30,18 +27,19 @@ public class IDProcessor extends AIMLProcessor
     /**
      * Creates a new IDProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public IDProcessor(Core coreToUse)
+    public IDProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
     @Override
-    public String process(@SuppressWarnings("unused") Element element, TemplateParser parser)
+    @SuppressWarnings("unused")
+    public String process(Element element, TemplateParser parser)
     {
         return parser.getUserID();
     }

@@ -9,7 +9,7 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,20 +21,12 @@ import org.aitools.programd.Core;
 import org.aitools.programd.CoreSettings;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
-import org.aitools.programd.util.FileManager;
+import org.aitools.util.resource.Filesystem;
 
 /**
- * <p>
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-system">system</a></code>
- * element.
- * </p>
- * <p>
- * No attempt is made to check whether the command passed to the OS interpreter
- * is harmful.
- * </p>
+ * <p>Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-system">system</a></code> element.</p>
+ * <p>No attempt is made to check whether the command passed to the OS interpreter is harmful.</p>
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Mark Anacker
  * @author Thomas Ringate, Pedro Colla
@@ -46,14 +38,10 @@ public class SystemProcessor extends AIMLProcessor
     public static final String label = "system";
 
     /**
-     * Known names of operating systems which tend to require the
-     * array form of ProcessBuilder().
+     * Known names of operating systems which tend to require the array form of ProcessBuilder().
      */
-    private static final String[] arrayFormOSnames = { "mac os x", "linux", "solaris", "sunos", "mpe", "hp-ux", "pa_risc", "aix", "freebsd", "irix",
-            "unix", "windows xp" };
-
-    /** For convenience, the system line separator. */
-    protected static final String LINE_SEPARATOR = System.getProperty("line.separator", "\n");
+    private static final String[] arrayFormOSnames = { "mac os x", "linux", "solaris", "sunos", "mpe", "hp-ux",
+            "pa_risc", "aix", "freebsd", "irix", "unix", "windows xp" };
 
     /** Whether to use the array form of Runtime.exec(). */
     private static boolean useArrayExecForm;
@@ -73,76 +61,74 @@ public class SystemProcessor extends AIMLProcessor
         }
     }
 
-    /** A regex matching any amount of whitespace (for splitting strings into words). */
-    private static final String STRING_SPLIT_REGEX = "\\s";
-
     /**
      * Creates a new SystemProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public SystemProcessor(Core coreToUse)
+    public SystemProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
         CoreSettings coreSettings = parser.getCore().getSettings();
 
         // Don't use the system tag if not permitted.
-        if (!coreSettings.osAccessAllowed())
+        if (!coreSettings.allowOSAccess())
         {
             logger.warn("Use of <system> prohibited!");
-            return EMPTY_STRING;
+            return "";
         }
 
         String directoryPath = coreSettings.getSystemInterpreterDirectory().getPath();
         String prefix = coreSettings.getSystemInterpreterPrefix();
 
-        String commandLine = parser.evaluate(element.getChildNodes());
+        String commandLine = parser.evaluate(element.getContent());
         if (prefix != null)
         {
             commandLine = prefix + commandLine;
         }
-        String output = EMPTY_STRING;
+        String output = "";
         commandLine = commandLine.trim();
         logger.debug("<system> call: " + commandLine);
-        if (directoryPath == null || EMPTY_STRING.equals(directoryPath))
+        if (directoryPath == null || "".equals(directoryPath))
         {
             logger.error("No programd.interpreter.system.directory defined!");
-            return EMPTY_STRING;
+            return "";
         }
-        File directory = FileManager.getExistingDirectory(directoryPath);
+        File directory = Filesystem.getExistingDirectory(directoryPath);
         logger.debug("Executing <system> call in \"" + directory.getPath() + "\"");
         ProcessBuilder processBuilder = null;
         if (useArrayExecForm)
         {
-        	processBuilder = new ProcessBuilder(commandLine.split(STRING_SPLIT_REGEX));
+            processBuilder = new ProcessBuilder(commandLine.split("\\s"));
         }
         else
         {
-        	processBuilder = new ProcessBuilder(commandLine);
+            processBuilder = new ProcessBuilder(commandLine);
         }
         processBuilder.directory(directory);
         Process child = null;
         try
         {
-        	child = processBuilder.start();
+            child = processBuilder.start();
         }
         catch (IOException e)
         {
             logger.warn(String.format("Error executing <system> command \"%s\"", commandLine), e);
-            return EMPTY_STRING;
+            return "";
         }
         if (child == null)
         {
             logger.error("Could not get separate process for <system> command.");
-            return EMPTY_STRING;
+            return "";
         }
 
         try
@@ -152,7 +138,7 @@ public class SystemProcessor extends AIMLProcessor
         catch (InterruptedException e)
         {
             logger.error("System process interruped; could not complete.");
-            return EMPTY_STRING;
+            return "";
         }
 
         try

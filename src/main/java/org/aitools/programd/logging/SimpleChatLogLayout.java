@@ -12,7 +12,7 @@ package org.aitools.programd.logging;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.aitools.programd.logging.ChatLogEvent;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.util.xml.XHTML;
 import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
@@ -20,19 +20,12 @@ import org.apache.log4j.spi.LoggingEvent;
  * Formats a ChatLogEvent by printing a number of extra fields as we like them.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.6
  */
 public class SimpleChatLogLayout extends SimpleLayout
 {
     private SimpleDateFormat timestampFormat;
-    
+
     private boolean showTimestamp;
-    
-    private static final String RBRACKET_SPACE = "] ";
-
-    private static final String RANGLE_BRACKET_SPACE = "> ";
-
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator", "\n");
 
     /**
      * Creates a new SimpleFormatter with the given Core settings.
@@ -41,12 +34,12 @@ public class SimpleChatLogLayout extends SimpleLayout
     {
         super();
     }
-    
-   /**
-    * Sets the timestamp format to the given format.
-    * 
-    * @param format the timestamp format to use
-    */
+
+    /**
+     * Sets the timestamp format to the given format.
+     * 
+     * @param format the timestamp format to use
+     */
     public void setTimestampFormat(String format)
     {
         if (format.length() > 0)
@@ -74,8 +67,7 @@ public class SimpleChatLogLayout extends SimpleLayout
     {
         if (!(event instanceof ChatLogEvent))
         {
-            throw new IllegalArgumentException(
-                    "XMLChatLogLayout is intended to handle ChatLogEvents only.");
+            throw new IllegalArgumentException("XMLChatLogLayout is intended to handle ChatLogEvents only.");
         }
         return format((ChatLogEvent) event);
     }
@@ -87,32 +79,28 @@ public class SimpleChatLogLayout extends SimpleLayout
      */
     public String format(ChatLogEvent event)
     {
-        String[] responseLines = XMLKit.filterViaHTMLTags(event.getReply());
+        String[] responseLines = XHTML.breakLines(event.getReply());
         StringBuilder result = new StringBuilder();
         int responseLineCount = responseLines.length;
         String datetime = null;
         if (this.showTimestamp)
         {
             datetime = this.timestampFormat.format(new Date(event.timeStamp));
-            result.append('[' + datetime + RBRACKET_SPACE + event.getUserID()
-                    + RANGLE_BRACKET_SPACE + event.getInput() + LINE_SEPARATOR);
+            result.append(String.format("[%s] %s> %s%n", datetime, event.getUserID(), event.getInput()));
         }
         else
         {
-            result.append(event.getUserID() + RANGLE_BRACKET_SPACE + event.getInput()
-                    + LINE_SEPARATOR);
+            result.append(String.format("%s> %s%n", event.getUserID(), event.getInput()));
         }
         for (int index = 0; index < responseLineCount; index++)
         {
             if (this.showTimestamp)
             {
-                result.append('[' + datetime + RBRACKET_SPACE + event.getBotID()
-                        + RANGLE_BRACKET_SPACE + responseLines[index] + LINE_SEPARATOR);
+                result.append(String.format("[%s] %s> %s%n", datetime, event.getBotID(), responseLines[index]));
             }
             else
             {
-                result.append(event.getBotID() + RANGLE_BRACKET_SPACE + responseLines[index]
-                        + LINE_SEPARATOR);
+                result.append(String.format("%s> %s%n", event.getBotID(), responseLines[index]));
             }
         }
         return result.toString();

@@ -10,71 +10,90 @@
 package org.aitools.programd.parser;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import org.w3c.dom.Element;
 import org.aitools.programd.Core;
+import org.aitools.programd.graph.Match;
 import org.aitools.programd.processor.ProcessorException;
 import org.aitools.programd.processor.aiml.AIMLProcessor;
-import org.apache.log4j.Logger;
+import org.jdom.Element;
 
 /**
- * <code>TemplateParser</code> has been rewritten (starting in 4.5) to use DOM
- * for parsing. It also eliminates handling of "deprecated AIML" (this will be
- * possible to handle again later with an extensible version of D).
+ * <code>TemplateParser</code> parses templates!  :-)
  */
 public class TemplateParser extends GenericParser<AIMLProcessor>
 {
-    /**
-     * The values captured from the input by wildcards in the
-     * <code>pattern</code>.
-     */
-    private ArrayList<String> inputStars = new ArrayList<String>();
+    /** The inputs that matched the <code>pattern</code> associated with this template (helps to avoid endless loops). */
+    private ArrayList<String> _inputs = new ArrayList<String>();
 
-    /**
-     * The values captured from the input path by wildcards in the
-     * <code>that</code>.
-     */
-    private ArrayList<String> thatStars = new ArrayList<String>();
+    /** The thats that matched the <code>pattern</code> associated with this template (helps to avoid endless loops). */
+    private ArrayList<String> _thats = new ArrayList<String>();
 
-    /**
-     * The values captured from the input path by wildcards in the
-     * <code>topic</code>.
-     */
-    private ArrayList<String> topicStars = new ArrayList<String>();
+    /** The topics that matched the <code>pattern</code> associated with this template (helps to avoid endless loops). */
+    private ArrayList<String> _topics = new ArrayList<String>();
 
-    /**
-     * The input that matched the <code>pattern</code> associated with this
-     * template (helps to avoid endless loops).
-     */
-    private ArrayList<String> inputs = new ArrayList<String>();
+    /** The match(es) responsible for this template parser. */
+    private ArrayList<Match> _matches = new ArrayList<Match>();
 
     /** The userid for which this parser is used. */
-    private String userid;
+    private String _userid;
 
     /** The botid on whose behalf this parser is working. */
-    private String botid;
+    private String _botid;
 
     /**
-     * Initializes an <code>TemplateParser</code>. The <code>input</code>
-     * is a required parameter!
-     * 
-     * @param input the input that matched the <code>pattern</code> associated
-     *            with this template (helps to avoid endless loops)
-     * @param useridToUse the userid for whom the template is being parsed
-     * @param botidToUse the botid for whom the template is being parsed
-     * @param coreToUse the Core in use
-     * @throws TemplateParserException if the <code>input</code> is null
+     * @param core
      */
-    public TemplateParser(String input, String useridToUse, String botidToUse, Core coreToUse) throws TemplateParserException
+    public TemplateParser(Core core)
     {
-        super(coreToUse.getAIMLProcessorRegistry(), coreToUse);
-        if (input == null)
-        {
-            throw new TemplateParserException("No input supplied for TemplateParser!");
-        }
-        this.inputs.add(input);
-        this.userid = useridToUse;
-        this.botid = botidToUse;
+        this("", "", "", "", "", core);
+    }
+    
+    /**
+     * @param userid
+     * @param botid
+     * @param core
+     */
+    public TemplateParser(String userid, String botid, Core core)
+    {
+        this("", "", "", userid, botid, core);
+    }
+    
+    /**
+     * @param input 
+     * @param that 
+     * @param topic 
+     * @param userid the userid for whom the template will be parsed
+     * @param botid the botid for whom the template will be parsed
+     * @param core the Core in use
+     */
+    public TemplateParser(String input, String that, String topic, String userid, String botid, Core core)
+    {
+        super(core.getAIMLProcessorRegistry(), core);
+        this._inputs.add(input);
+        this._thats.add(that);
+        this._topics.add(topic);
+        this._userid = userid;
+        this._botid = botid;
+    }
+
+    /**
+     * @param inputs
+     * @param thats 
+     * @param topics 
+     * @param userid the userid for whom the template will be parsed
+     * @param botid the botid for whom the template will be parsed
+     * @param core the Core in use
+     */
+    public TemplateParser(List<String> inputs, List<String> thats, List<String> topics, String userid, String botid,
+            Core core)
+    {
+        super(core.getAIMLProcessorRegistry(), core);
+        this._inputs.addAll(inputs);
+        this._thats.addAll(thats);
+        this._topics.addAll(topics);
+        this._userid = userid;
+        this._botid = botid;
     }
 
     /**
@@ -88,22 +107,31 @@ public class TemplateParser extends GenericParser<AIMLProcessor>
     {
         try
         {
-            return super.processElement(element);
+            return super.evaluate(element);
         }
         catch (StackOverflowError e)
         {
-            Logger.getLogger("programd").error("Stack overflow error processing " + element.getLocalName() + " tag.");
-            return EMPTY_STRING;
+            this._logger.error(String.format("Stack overflow error processing <%s/>.", element.getName()));
+            return "";
         }
     }
 
     /**
-     * @see org.aitools.programd.parser.GenericParser#processResponse(java.lang.String)
+     * Adds a {@link Match} object to the list of matches.
+     * 
+     * @param match
      */
-    @Override
-    public String processResponse(String templateContent) throws ProcessorException
+    public void addMatch(Match match)
     {
-        return super.processResponse(templateContent);
+        this._matches.add(match);
+    }
+
+    /**
+     * @return the most recent match
+     */
+    public Match getMostRecentMatch()
+    {
+        return this._matches.get(this._matches.size() - 1);
     }
 
     /**
@@ -113,88 +141,57 @@ public class TemplateParser extends GenericParser<AIMLProcessor>
      */
     public void addInput(String input)
     {
-        this.inputs.add(input);
+        this._inputs.add(input);
     }
 
     /**
-     * Returns the input that matched the <code>pattern</code> associated with
-     * this template.
+     * Returns the input that matched the <code>pattern</code> associated with this template.
      * 
-     * @return the input that matched the <code>pattern</code> associated with
-     *         this template
+     * @return the input that matched the <code>pattern</code> associated with this template
      */
     public ArrayList<String> getInputs()
     {
-        return this.inputs;
+        return this._inputs;
     }
 
     /**
-     * Returns the values captured from the input path by wildcards in the
-     * <code>pattern</code>.
+     * Adds a that to the thats list (for avoiding infinite loops).
      * 
-     * @return the values captured from the input path by wildcards in the
-     *         <code>pattern</code>
+     * @param that the that to add
      */
-    public ArrayList<String> getInputStars()
+    public void addThat(String that)
     {
-        return this.inputStars;
+        this._thats.add(that);
     }
 
     /**
-     * Returns the the values captured from the input path by wildcards in the
-     * <code>that</code>.
+     * Returns the that that matched the <code>that</code> associated with this template.
      * 
-     * @return the values captured from the input path by wildcards in the
-     *         <code>that</code>
+     * @return the that that matched the <code>that</code> associated with this template
      */
-    public ArrayList<String> getThatStars()
+    public ArrayList<String> getThats()
     {
-        return this.thatStars;
+        return this._thats;
     }
 
     /**
-     * Returns the values captured from the input path by wildcards in the
-     * <code>topic name</code>.
+     * Adds a topic to the topics list (for avoiding infinite loops).
      * 
-     * @return the values captured from the input path by wildcards in the
-     *         <code>topic name</code>
+     * @param topic the topic to add
      */
-    public ArrayList<String> getTopicStars()
+    public void addTopic(String topic)
     {
-        return this.topicStars;
+        this._topics.add(topic);
     }
 
     /**
-     * Sets the <code>inputStars</code> list.
+     * Returns the topics that matched the <code>topic</code> associated with this template.
      * 
-     * @param stars values captured from the input path by wildcards in the
-     *            <code>pattern</code>
+     * @return the topic that matched the <code>topic</code> associated with this template
      */
-    public void setInputStars(ArrayList<String> stars)
+    public ArrayList<String> getTopics()
     {
-        this.inputStars = stars;
-    }
-
-    /**
-     * Sets the <code>thatStars</code> list.
-     * 
-     * @param stars values captured from the input path by wildcards in the
-     *            <code>that</code>
-     */
-    public void setThatStars(ArrayList<String> stars)
-    {
-        this.thatStars = stars;
-    }
-
-    /**
-     * Sets the <code>topicStars</code> Vector.
-     * 
-     * @param stars captured from the input path by wildcards in the
-     *            <code>topic name</code>
-     */
-    public void setTopicStars(ArrayList<String> stars)
-    {
-        this.topicStars = stars;
+        return this._topics;
     }
 
     /**
@@ -202,7 +199,7 @@ public class TemplateParser extends GenericParser<AIMLProcessor>
      */
     public String getUserID()
     {
-        return this.userid;
+        return this._userid;
     }
 
     /**
@@ -210,6 +207,6 @@ public class TemplateParser extends GenericParser<AIMLProcessor>
      */
     public String getBotID()
     {
-        return this.botid;
+        return this._botid;
     }
 }

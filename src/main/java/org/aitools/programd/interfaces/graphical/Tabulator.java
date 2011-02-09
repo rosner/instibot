@@ -29,13 +29,12 @@ import javax.swing.table.TableColumn;
 abstract public class Tabulator extends JPanel
 {
     /** The table displayed by the Tabulator. */
-    protected JTable table;
+    private JTable table;
 
     /**
-     * The number of columns of data managed by the Tabulator (may be more than
-     * the number of visible columns!).
+     * The number of columns of data managed by the Tabulator (may be more than the number of visible columns!).
      */
-    protected int columnCount;
+    private int columnCount;
 
     /** The number of visible columns in the table. */
     private int visibleColumnCount;
@@ -94,12 +93,12 @@ abstract public class Tabulator extends JPanel
         for (int index = 0; index < this.visibleColumnCount; index++)
         {
             column = this.table.getColumnModel().getColumn(index);
-            component = this.table.getTableHeader().getDefaultRenderer().getTableCellRendererComponent(null, column.getHeaderValue(), false, false,
-                    0, 0);
+            component = this.table.getTableHeader().getDefaultRenderer().getTableCellRendererComponent(null,
+                    column.getHeaderValue(), false, false, 0, 0);
             headerWidth = component.getPreferredSize().width;
 
-            component = this.table.getDefaultRenderer(this.sorterTableModel.getColumnClass(index)).getTableCellRendererComponent(this.table,
-                    longestRow[index], false, false, 0, index);
+            component = this.table.getDefaultRenderer(this.sorterTableModel.getColumnClass(index))
+                    .getTableCellRendererComponent(this.table, longestRow[index], false, false, 0, index);
 
             cellWidth = component.getPreferredSize().width;
             column.setPreferredWidth(Math.max(headerWidth, cellWidth));

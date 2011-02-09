@@ -9,17 +9,14 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-version">version</a></code>
- * element.
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-version">version</a></code> element.
  * 
- * @version 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class VersionProcessor extends AIMLProcessor
@@ -30,19 +27,21 @@ public class VersionProcessor extends AIMLProcessor
     /**
      * Creates a new VersionProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public VersionProcessor(Core coreToUse)
+    public VersionProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
     @Override
-    public String process(@SuppressWarnings("unused") Element element, @SuppressWarnings("unused") TemplateParser parser)
+    @SuppressWarnings("unused")
+    public String process(Element element, TemplateParser parser)
     {
-        return Core.VERSION + Core.BUILD;
+        Package pkg = Package.getPackage("org.aitools.programd");
+        return String.format("%s version %s [%s].", pkg.getSpecificationTitle(), pkg.getSpecificationVersion(), pkg.getImplementationVersion());
     }
 }

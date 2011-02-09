@@ -9,19 +9,15 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
 
 /**
- * Handles an
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-sr">sr</a></code>
- * element.
+ * Handles an <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-sr">sr</a></code> element.
  * 
- * @version 4.5
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class SRProcessor extends AIMLProcessor
@@ -32,11 +28,11 @@ public class SRProcessor extends AIMLProcessor
     /**
      * Creates a new SRProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public SRProcessor(Core coreToUse)
+    public SRProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
@@ -45,6 +41,6 @@ public class SRProcessor extends AIMLProcessor
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
-        return parser.shortcutTag(element, SRAIProcessor.label, StarProcessor.label, Node.ELEMENT_NODE);
+        return parser.shortcutTag(element, SRAIProcessor.label, StarProcessor.label, Element.class);
     }
 }

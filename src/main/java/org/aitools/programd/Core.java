@@ -9,142 +9,143 @@
 
 package org.aitools.programd;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.parsers.SAXParser;
-
-import org.aitools.programd.bot.Bot;
-import org.aitools.programd.bot.Bots;
-import org.aitools.programd.graph.Graphmaster;
-import org.aitools.programd.graph.Nodemapper;
+import org.aitools.programd.graph.Graphmapper;
+import org.aitools.programd.graph.Match;
 import org.aitools.programd.interfaces.ConsoleStreamAppender;
 import org.aitools.programd.interpreter.Interpreter;
-import org.aitools.programd.multiplexor.Multiplexor;
-import org.aitools.programd.multiplexor.PredicateMaster;
-import org.aitools.programd.parser.AIMLReader;
+import org.aitools.programd.logging.ChatLogEvent;
 import org.aitools.programd.parser.BotsConfigurationFileParser;
-import org.aitools.programd.processor.ProcessorException;
+import org.aitools.programd.parser.TemplateParser;
+import org.aitools.programd.predicates.PredicateManager;
 import org.aitools.programd.processor.aiml.AIMLProcessorRegistry;
-import org.aitools.programd.processor.botconfiguration.BotConfigurationElementProcessorRegistry;
 import org.aitools.programd.util.AIMLWatcher;
-import org.aitools.programd.util.ClassUtils;
-import org.aitools.programd.util.DeveloperError;
-import org.aitools.programd.util.FileManager;
 import org.aitools.programd.util.Heart;
-import org.aitools.programd.util.JDKLogHandler;
+import org.aitools.programd.util.InputNormalizer;
 import org.aitools.programd.util.ManagedProcesses;
-import org.aitools.programd.util.UnspecifiedParameterError;
-import org.aitools.programd.util.URLTools;
-import org.aitools.programd.util.UserError;
-import org.aitools.programd.util.UserSystem;
-import org.aitools.programd.util.XMLKit;
+import org.aitools.programd.util.NoMatchException;
+import org.aitools.programd.util.Pulse;
+import org.aitools.util.Classes;
+import org.aitools.util.runtime.DeveloperError;
+import org.aitools.util.resource.Filesystem;
+import org.aitools.util.JDKLogHandler;
+import org.aitools.util.resource.URLTools;
+import org.aitools.util.UnspecifiedParameterError;
+import org.aitools.util.runtime.Errors;
+import org.aitools.util.runtime.UserError;
+import org.aitools.util.runtime.UserSystem;
+import org.aitools.util.xml.JDOM;
+import org.apache.commons.dbcp.ConnectionFactory;
+import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.PoolingDriver;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.w3c.dom.Document;
+import org.jdom.Document;
 
 /**
- * The "core" of Program D, independent of any interfaces.
+ * The "core" of Program D, independent of any user interfaces.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
 public class Core
 {
-    protected static final String PACKAGE_NAME = Core.class.getPackage().getName().replaceAll("\\.", "/");
-    // Public access informational constants.
-
-    /** Copyright notice. */
-    public static final String[] COPYLEFT = { "Program D",
-            "This program is free software; you can redistribute it and/or",
-            "modify it under the terms of the GNU General Public License",
-            "as published by the Free Software Foundation; either version 2",
-            "of the License, or (at your option) any later version." };
-
-    /** Version of this package. */
-    public static final String VERSION = "4.6";
-
-    /** Build identifier. */
-    public static final String BUILD = "";
-    
-    /** The location of the AIML schema. */
-    private static final String AIML_SCHEMA_LOCATION = "AIML.xsd";
-
-    /** The namespace URI of the bot configuration. */
-    public static final String BOT_CONFIG_SCHEMA_URI = "http://aitools.org/programd/4.6/bot-configuration";
-    
     /** The namespace URI of the plugin configuration. */
-    public static final String PLUGIN_CONFIG_SCHEMA_URI = "http://aitools.org/programd/4.6/plugins";
+    public static final String PLUGIN_CONFIG_NS_URI = "http://aitools.org/programd/4.7/plugins";
+
+    /** The location of the XML catalog, as a string. */
+    private static String XML_CATALOG_URL = "resources/catalog.xml";
     
-    /** The location of the plugins schema. */
-    private static final String PLUGINS_SCHEMA_LOCATION = "plugins.xsd";
-        
-    /** The base URL. */
-    private URL baseURL;
+    /** The location of the XMLResolver config file, as a string. */
+    private static String XMLRESOLVER_CONFIG_URL = "conf/XMLResolver.properties";
+
+    /** The URL of the XML catalog. */
+    private URL _xmlCatalog;
+    
+    /** The URL of the XMLResolver config file. */
+    private URL _xmlresolverConfig;
+    
+    /** XML Parser feature settings. */
+    private Map<String, Boolean> _xmlParserFeatureSettings;
 
     /** The Settings. */
-    protected CoreSettings settings;
+    protected CoreSettings _settings;
 
-    /** The Graphmaster. */
-    private Graphmaster graphmaster;
+    /** The base URL. */
+    private URL _baseURL;
 
-    /** The Multiplexor. */
-    private Multiplexor multiplexor;
+    /** The Graphmapper. */
+    private Graphmapper _graphmapper;
 
     /** The PredicateMaster. */
-    private PredicateMaster predicateMaster;
+    private PredicateManager _predicateManager;
 
     /** The bots. */
-    private Bots bots;
+    private Bots _bots;
 
-    /** The processes. */
-    private ManagedProcesses processes;
-
-    /** The bot configuration element processor registry. */
-    private BotConfigurationElementProcessorRegistry botConfigurationElementProcessorRegistry;
-
-    /** The SAXParser used in loading AIML. */
-    private SAXParser parser;
+    /** The processes that are managed by the core. */
+    private ManagedProcesses _processes;
 
     /** The AIML processor registry. */
-    private AIMLProcessorRegistry aimlProcessorRegistry;
+    private AIMLProcessorRegistry _aimlProcessorRegistry;
 
     /** An AIMLWatcher. */
-    private AIMLWatcher aimlWatcher;
+    private AIMLWatcher _aimlWatcher;
 
     /** An interpreter. */
-    private Interpreter interpreter;
+    private Interpreter _interpreter;
+
+    /** The database connection pool. */
+    private GenericObjectPool _connectionPool;
 
     /** The logger for the Core. */
-    private Logger logger = LogManager.getLogger("programd");
+    private Logger _logger = LogManager.getLogger("programd");
 
-    /** Load time marker. */
-    private boolean loadtime;
+    /** The log where match info will be recorded. */
+    protected Logger _matchLogger = Logger.getLogger("programd.matching");
 
     /** Name of the local host. */
-    private String hostname;
+    private String _hostname;
 
     /** A heart. */
-    private Heart heart;
+    private Heart _heart;
 
     /** The plugin config. */
-    private Document pluginConfig;
+    private Document _pluginConfig;
+    
+    /** The value to return when a predicate is empty. */
+    private String _predicateEmptyDefault;
+
+    /** The time that the Multiplexor started operation. */
+    protected long _startTime = System.currentTimeMillis();
+
+    /** A counter for tracking the number of responses produced. */
+    protected long _responseCount = 0;
+
+    /** The total response time. */
+    protected long _totalTime = 0;
+
+    /** A counter for tracking average response time. */
+    protected float _avgResponseTime = 0;
 
     /** The status of the Core. */
-    protected Status status = Status.NOT_STARTED;
+    private Status _status = Status.NOT_STARTED;
 
     /** Possible values for status. */
     public static enum Status
@@ -165,65 +166,80 @@ public class Core
         CRASHED
     }
 
-    // Convenience constants.
-    private static final String EMPTY_STRING = "";
-
-    /** The <code>*</code> wildcard. */
-    public static final String ASTERISK = "*";
+    /** A general-purpose map for storing all manner of objects (by AIML processors and the like). */
+    private Map<String, Map<String, Object>> classStorage = new HashMap<String, Map<String, Object>>();
 
     /**
-     * Initializes a new Core object with default property values
-     * and the given base URL.
+     * Initializes a new Core object with default settings and the given base URL.
      * 
      * @param base the base URL to use
      */
     public Core(URL base)
     {
-        this.settings = new CoreSettings();
-        this.baseURL = base;
-        FileManager.setRootPath(FileManager.getWorkingDirectory());
+        setup(base);
+        Filesystem.setRootPath(Filesystem.getWorkingDirectory());
+        this._settings = new ProgrammaticCoreSettings();
+        this._status = Status.INITIALIZED;
         start();
     }
 
     /**
-     * Initializes a new Core object with the properties from the given file
-     * and the given base URL.
+     * Initializes a new Core object with the settings from the given file and the given base URL.
      * 
      * @param base the base URL to use
-     * @param propertiesPath
+     * @param settings the path to the file with settings
      */
-    public Core(URL base, URL propertiesPath)
+    public Core(URL base, URL settings)
     {
-        this.baseURL = base;
-        this.settings = new CoreSettings(propertiesPath);
-        FileManager.setRootPath(URLTools.getParent(this.baseURL));
+        setup(base);
+        Filesystem.setRootPath(URLTools.getParent(this._baseURL));
+        this._settings = new XMLCoreSettings(settings, this._logger);
+        this._status = Status.INITIALIZED;
         start();
     }
 
     /**
-     * Initializes a new Core object with the given CoreSettings object
-     * and the given base URL.
+     * Initializes a new Core object with the given CoreSettings object and the given base URL.
      * 
      * @param base the base URL to use
-     * @param settingsToUse the settings to use
+     * @param settings the settings to use
      */
-    public Core(URL base, CoreSettings settingsToUse)
+    public Core(URL base, CoreSettings settings)
     {
-        this.settings = settingsToUse;
-        this.baseURL = base;
-        FileManager.setRootPath(URLTools.getParent(this.baseURL));
+        setup(base);
+        this._settings = settings;
+        Filesystem.setRootPath(this._baseURL);
+        this._status = Status.INITIALIZED;
         start();
+    }
+
+    private void setup(URL base)
+    {
+        this._baseURL = base;
+        this._xmlCatalog = URLTools.contextualize(this._baseURL, XML_CATALOG_URL);
+        this._xmlresolverConfig = URLTools.contextualize(this._baseURL, XMLRESOLVER_CONFIG_URL);
     }
 
     /**
      * Initializes and starts up the Core.
      */
+    @SuppressWarnings("boxing")
     protected void start()
     {
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
+        // Set up the XML parsing feature settings.
+        this._xmlParserFeatureSettings = new HashMap<String, Boolean>(6);
+        this._xmlParserFeatureSettings.put("http://xml.org/sax/features/use-entity-resolver2", this._settings.xmlParserUseEntityResolver2());
+        this._xmlParserFeatureSettings.put("http://xml.org/sax/features/validation", this._settings.xmlParserUseValidation());
+        this._xmlParserFeatureSettings.put("http://apache.org/xml/features/validation/schema", this._settings.xmlParserUseSchemaValidation());
+        this._xmlParserFeatureSettings.put("http://apache.org/xml/features/honour-all-schemaLocations", this._settings.xmlParserHonourAllSchemaLocations());
+        this._xmlParserFeatureSettings.put("http://apache.org/xml/features/xinclude", this._settings.xmlParserUseXInclude());
+        this._xmlParserFeatureSettings.put("http://apache.org/xml/features/validate-annotations", this._settings.xmlParserValidateAnnotations());
+
         // Use the stdout and stderr appenders in a special way, if they are defined.
-        ConsoleStreamAppender stdOutAppender = ((ConsoleStreamAppender)Logger.getLogger("programd").getAppender("stdout"));
+        ConsoleStreamAppender stdOutAppender = ((ConsoleStreamAppender) Logger.getLogger("programd").getAppender(
+                "stdout"));
         if (stdOutAppender != null)
         {
             if (!stdOutAppender.isWriterSet())
@@ -231,8 +247,9 @@ public class Core
                 stdOutAppender.setWriter(new OutputStreamWriter(System.out));
             }
         }
-        
-        ConsoleStreamAppender stdErrAppender = ((ConsoleStreamAppender)Logger.getLogger("programd").getAppender("stderr"));
+
+        ConsoleStreamAppender stdErrAppender = ((ConsoleStreamAppender) Logger.getLogger("programd").getAppender(
+                "stderr"));
         if (stdErrAppender != null)
         {
             if (!stdErrAppender.isWriterSet())
@@ -240,80 +257,67 @@ public class Core
                 stdErrAppender.setWriter(new OutputStreamWriter(System.err));
             }
         }
-        
+
         // Set up an interception of calls to the JDK logging system and re-route to log4j.
         JDKLogHandler.setupInterception();
-        
-        this.aimlProcessorRegistry = new AIMLProcessorRegistry();
-        this.botConfigurationElementProcessorRegistry = new BotConfigurationElementProcessorRegistry();
-        PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
-        Resource resource = resourcePatternResolver.getResource("classpath:" + PACKAGE_NAME + "/" + AIML_SCHEMA_LOCATION);
-        try {
-            this.parser = XMLKit.getSAXParser(resource.getURL(), "AIML");
-	} catch (IOException e1) {
-	    throw new RuntimeException(e1);
-	}	
-	
-        
-        this.graphmaster = new Graphmaster(this);
-        this.bots = new Bots();
-        this.processes = new ManagedProcesses(this);
 
-        // Get an instance of the settings-specified Multiplexor.
-        this.multiplexor = ClassUtils.getSubclassInstance(Multiplexor.class, this.settings.getMultiplexorImplementation(),
-                "Multiplexor", this);
+        this._logger.info(String.format("Base URL for Program D Core: \"%s\".", this._baseURL));
 
-        // Initialize the PredicateMaster and attach it to the Multiplexor.
-        this.predicateMaster = new PredicateMaster(this);
-        this.multiplexor.attach(this.predicateMaster);
+        this._aimlProcessorRegistry = new AIMLProcessorRegistry();
+
+        this._graphmapper = Classes.getSubclassInstance(Graphmapper.class, this._settings
+                .getGraphmapperImplementation(), "Graphmapper implementation", this);
+        this._bots = new Bots();
+        this._processes = new ManagedProcesses(this);
+
+        // Get an instance of the settings-specified PredicateManager.
+        this._predicateManager = Classes.getSubclassInstance(PredicateManager.class, this._settings
+                .getPredicateManagerImplementation(), "PredicateManager", this);
 
         // Get the hostname (used occasionally).
         try
         {
-            this.hostname = InetAddress.getLocalHost().getHostName();
+            this._hostname = InetAddress.getLocalHost().getHostName();
         }
         catch (UnknownHostException e)
         {
-            this.hostname = "unknown-host";
+            this._hostname = "unknown hostname";
         }
 
         // Load the plugin config.
-        try
+        URL pluginConfigURL = this._settings.getPluginConfigURL();
+        if (pluginConfigURL != null)
         {
-            resourcePatternResolver.getResource("classpath:" + PACKAGE_NAME + "/" + PLUGINS_SCHEMA_LOCATION);
-            this.pluginConfig = XMLKit.getDocumentBuilder(resource.getURL(),
-                    "plugin configuration").parse(
-                    URLTools.contextualize(this.baseURL, this.settings.getConfLocationPlugins())
-                            .toString());
-        }
-        catch (IOException e)
-        {
-            this.logger.error("IO error trying to read plugin configuration.", e);
-        }
-        catch (SAXException e)
-        {
-            this.logger.error("Error trying to parse plugin configuration.", e);
-        }
-
-        this.logger.info("Starting Program D version " + VERSION + BUILD + '.');
-        this.logger.info(UserSystem.jvmDescription());
-        this.logger.info(UserSystem.osDescription());
-        this.logger.info(UserSystem.memoryReport());
-        this.logger.info("Predicates with no values defined will return: \""
-                + this.settings.getPredicateEmptyDefault() + "\".");
-
-        try
-        {
-            this.logger.info("Initializing "
-                    + this.multiplexor.getClass().getSimpleName() + ".");
-
-            // Initialize the Multiplexor.
-            this.multiplexor.initialize();
-
-            // Create the AIMLWatcher if configured to do so.
-            if (this.settings.useWatcher())
+            pluginConfigURL = URLTools.contextualize(this._baseURL, pluginConfigURL);
+            try
             {
-                this.aimlWatcher = new AIMLWatcher(this);
+                if (pluginConfigURL.openStream() != null)
+                {
+                    this._pluginConfig = JDOM.getDocument(pluginConfigURL, this._logger);
+                }
+            }
+            catch (IOException e)
+            {
+                // Don't load plugin config.
+            }
+        }
+
+        // TODO: Make this work even if the classes aren't in a jar.
+        Package pkg = Package.getPackage("org.aitools.programd");
+        this._logger.info(String.format("Starting %s version %s [%s].", pkg.getSpecificationTitle(), pkg
+                .getSpecificationVersion(), pkg.getImplementationVersion()));
+        this._logger.info(UserSystem.jvmDescription());
+        this._logger.info(UserSystem.osDescription());
+        this._logger.info(UserSystem.memoryReport());
+        this._logger.info("Predicates with no values defined will return: \""
+                + this._settings.getPredicateEmptyDefault() + "\".");
+
+        try
+        {
+            // Create the AIMLWatcher if configured to do so.
+            if (this._settings.useAIMLWatcher())
+            {
+                this._aimlWatcher = new AIMLWatcher(this);
             }
 
             // Setup a JavaScript interpreter if supposed to.
@@ -322,15 +326,23 @@ public class Core
             // Start the AIMLWatcher if configured to do so.
             startWatcher();
 
-            this.logger.info("Starting up the Graphmaster.");
+            this._logger.info("Starting up the Graphmaster.");
 
             // Start loading bots.
-            loadBots(URLTools.contextualize(this.baseURL, this.settings.getStartupFilePath()));
-            
+            URL botConfigURL = this._settings.getBotConfigURL();
+            if (botConfigURL != null)
+            {
+                loadBotConfig(botConfigURL);
+            }
+            else
+            {
+                this._logger.warn("No bot config URL specified; no bots will be loaded.");
+            }
+
             // Request garbage collection.
             System.gc();
 
-            this.logger.info(UserSystem.memoryReport());
+            this._logger.info(UserSystem.memoryReport());
 
             // Start the heart, if enabled.
             startHeart();
@@ -338,344 +350,230 @@ public class Core
         catch (DeveloperError e)
         {
             alert("developer error", e);
-            //return;
         }
         catch (UserError e)
         {
             alert("user error", e);
-            //return;
         }
         catch (RuntimeException e)
         {
             alert("unforeseen runtime exception", e);
-            //return;
         }
         catch (Throwable e)
         {
             alert("unforeseen problem", e);
-            //return;
         }
 
         // Set the status indicator.
-        this.status = Status.READY;
-        
+        this._status = Status.READY;
+
         // Exit immediately if configured to do so (for timing purposes).
-        if (this.settings.exitImmediatelyOnStartup())
+        if (this._settings.exitImmediatelyOnStartup())
         {
             shutdown();
         }
     }
 
-    private void startWatcher()
+    protected void startWatcher()
     {
-        if (this.settings.useWatcher())
+        if (this._settings.useAIMLWatcher())
         {
-            this.aimlWatcher.start();
-            this.logger.info("The AIML Watcher is active.");
+            this._aimlWatcher.start();
+            this._logger.info("The AIML Watcher is active.");
         }
         else
         {
-            this.logger.info("The AIML Watcher is not active.");
+            this._logger.info("The AIML Watcher is not active.");
         }
     }
 
-    private void startHeart()
+    protected void startHeart()
     {
-        if (this.settings.heartEnabled())
+        if (this._settings.heartEnabled())
         {
-            this.heart = new Heart(this.settings.getHeartPulserate());
-            // Add a simple IAmAlive Pulse (this should be more
-            // configurable).
-            this.heart.addPulse(new org.aitools.programd.util.IAmAlivePulse());
-            this.heart.start();
-            this.logger.info("Heart started.");
+            this._heart = new Heart(this._settings.getHeartPulseRate());
+            String pulseImplementation = this._settings.getPulseImplementation();
+            if ("".equals(pulseImplementation))
+            {
+                this._logger.error(new UnspecifiedParameterError("pulse.implementation"));
+            }
+            else
+            {
+                this._heart.addPulse(Classes.getSubclassInstance(Pulse.class, pulseImplementation, "Pulse", this));
+                this._heart.start();
+                this._logger.info("Heart started.");
+            }
         }
     }
 
-    private void setupInterpreter() throws UserError, DeveloperError
+    protected void setupInterpreter()
     {
-        if (this.settings.javascriptAllowed())
+        if (this._settings.allowJavaScript())
         {
-            if (this.settings.getJavascriptInterpreterClassname() == null)
+            if (this._settings.getJavascriptInterpreterClassname() == null)
             {
-                throw new UserError(new UnspecifiedParameterError(
-                        "javascript-interpreter.classname"));
+                this._logger.error(new UnspecifiedParameterError("javascript-interpreter.classname"));
             }
 
-            String javascriptInterpreterClassname = this.settings
-                    .getJavascriptInterpreterClassname();
+            String javascriptInterpreterClassname = this._settings.getJavascriptInterpreterClassname();
 
-            if (javascriptInterpreterClassname.equals(EMPTY_STRING))
+            if ("".equals(javascriptInterpreterClassname))
             {
-                throw new UserError(new UnspecifiedParameterError(
-                        "javascript-interpreter.classname"));
+                this._logger.error(new UnspecifiedParameterError("javascript-interpreter.classname"));
             }
 
-            this.logger.info("Initializing " + javascriptInterpreterClassname + ".");
+            this._logger.info("Initializing " + javascriptInterpreterClassname + ".");
 
             try
             {
-                this.interpreter = (Interpreter) Class.forName(javascriptInterpreterClassname)
-                        .newInstance();
+                this._interpreter = (Interpreter) Class.forName(javascriptInterpreterClassname).newInstance();
             }
             catch (Exception e)
             {
-                throw new DeveloperError(
-                        "Error while creating new instance of JavaScript interpreter.", e);
+                this._logger.error("Error while creating new instance of JavaScript interpreter.", e);
             }
         }
         else
         {
-            this.logger.info("JavaScript interpreter not started.");
+            this._logger.info("JavaScript interpreter not started.");
         }
     }
 
     /**
-     * Loads the <code>Graphmaster</code> with the contents of a given path.
+     * Loads the given path for the given botid.
      * 
-     * @param path path to the file(s) to load
+     * @param path
      * @param botid
      */
     public void load(URL path, String botid)
     {
-        // Handle paths with wildcards that need to be expanded.
-        if (path.getProtocol().equals(FileManager.FILE))
-        {
-            String spec = path.getFile();
-            if (spec.indexOf(ASTERISK) != -1)
-            {
-                List<File> files = null;
-    
-                try
-                {
-                    files = FileManager.glob(spec);
-                }
-                catch (FileNotFoundException e)
-                {
-                    this.logger.warn(e.getMessage());
-                }
-                if (files != null)
-                {
-                    for (File file : files)
-                    {
-                        load(URLTools.contextualize(URLTools.getParent(path), file.getAbsolutePath()), botid);
-                    }
-                }
-                return;
-            }
-        }
-
-        Bot bot = this.bots.getBot(botid);
-
-        if (!shouldLoad(path, bot))
-        {
-            return;
-        }
-
-        //FileManager.pushWorkingDirectory(URLTools.getParent(path));
-        
-        // Let the Graphmaster use a shortcut if possible.
-        if (this.graphmaster.hasAlreadyLoaded(path))
-        {
-        	if (this.graphmaster.hasAlreadyLoadedForBot(path, botid))
-        	{
-        		this.graphmaster.unload(path, bot);
-        		doLoad(path, botid);
-        	}
-            if (this.logger.isDebugEnabled())
-            {
-                this.logger.debug(String.format("Graphaster has already loaded \"%s\" for some other bot.", path));
-            }
-            this.graphmaster.addForBot(path, botid);
-        }
-        else
-        {
-            if (this.settings.loadNotifyEachFile())
-            {
-                this.logger.info("Loading " + URLTools.unescape(path) + "....");
-            }
-            doLoad(path, botid);
-            // Add it to the AIMLWatcher, if active.
-            if (this.settings.useWatcher())
-            {
-                this.aimlWatcher.addWatchFile(path);
-            }
-        }
-        //FileManager.popWorkingDirectory();
+        this._graphmapper.load(path, botid);
     }
-    
+
     /**
-     * Reloads a file&mdash;it is not necessary to specify a particular
-     * botid here, because a reload of a file for one botid suffices
-     * for all bots associated with that file.
+     * Reloads the given path for the given botid.
      * 
      * @param path
-     * @throws IllegalArgumentException if the given path is not actually loaded for <em>any</em> bot
      */
     public void reload(URL path)
     {
-        Set<String> botids = this.graphmaster.getURLCatalog().get(path);
-        if (botids == null || botids.size() == 0)
+        Set<Bot> bots = new HashSet<Bot>();
+        for (Bot bot : this._bots.values())
         {
-            throw new IllegalArgumentException("Called Core.reload() with a path that is not loaded by any bot.");
+            if (bot.getLoadedFilesMap().containsKey(path))
+            {
+                bots.add(bot);
+            }
         }
-        // Get any botid -- we don't care.
-        doLoad(path, botids.iterator().next());
+        // First unload all,
+        for (Bot bot : bots)
+        {
+            this._graphmapper.unload(path, bot);
+        }
+        // then reload all.
+        for (Bot bot : bots)
+        {
+            this._graphmapper.load(path, bot.getID());
+        }
     }
-    
+
     /**
-     * An internal method used by {@link #load(URL, String)}.
+     * Unloads the given path for the given botid.
+     * 
      * @param path
      * @param botid
      */
-    private void doLoad(URL path, String botid)
+    public void unload(URL path, String botid)
     {
-    	try
-    	{
-	        AIMLReader reader = new AIMLReader(this.graphmaster, path, botid, this.bots
-	                .getBot(botid), this.settings.getAimlSchemaNamespaceUri().toString());
-	        try
-	        {
-	            this.parser.getXMLReader().setProperty("http://xml.org/sax/properties/lexical-handler", reader);
-	        }
-	        catch (SAXNotRecognizedException e)
-	        {
-	            this.logger.warn("The XML reader in use does not support lexical handlers -- CDATA will not be handled.", e);
-	        }
-	        catch (SAXNotSupportedException e)
-	        {
-	            this.logger.warn("The XML reader in use cannot enable the lexical handler feature -- CDATA will not be handled.", e);
-	        }
-	        catch (SAXException e)
-	        {
-	            this.logger.warn("An exception occurred when trying to enable the lexical handler feature on the XML reader -- CDATA will not be handled.", e);
-	        }
-	        this.parser.parse(path.toString(), reader);
-	        //System.gc();
-	        this.graphmaster.addURL(path, botid);
-        }
-        catch (IOException e)
-        {
-            this.logger.warn(String.format("Error reading \"%s\": %s", URLTools.unescape(path), e.getMessage()), e);
-        }
-        catch (SAXException e)
-        {
-            this.logger.warn(String.format("Error parsing \"%s\": %s", URLTools.unescape(path), e.getMessage()), e);
-        }
+        this._graphmapper.unload(path, getBot(botid));
     }
 
     /**
-     * Tracks/checks whether a given path should be loaded, depending on whether
-     * or not it's currently &quot;loadtime&quot;; if the file has already been
-     * loaded and is allowed to be reloaded, unloads the file first.
-     * 
-     * @param path the path to check
-     * @param bot the bot for whom to check
-     * @return whether or not the given path should be loaded
-     */
-    private boolean shouldLoad(URL path, Bot bot)
-    {
-        if (bot == null)
-        {
-            throw new NullPointerException("Null bot passed to loadCheck().");
-        }
-
-        Map<URL, Set<Nodemapper>> loadedFiles = bot.getLoadedFilesMap();
-
-        if (loadedFiles.keySet().contains(path))
-        {
-            // At load time, don't load an already-loaded file.
-            if (this.loadtime)
-            {
-                return false;
-            }
-            // At other times, unload the file before loading it again.
-            this.graphmaster.unload(path, bot);
-        }
-        else
-        {
-            loadedFiles.put(path, new HashSet<Nodemapper>());
-        }
-        return true;
-    }
-    
-    /**
-     * Sets "loadtime" mode
-     * (so accidentally duplicated paths in a load config
-     * won't be loaded multiple times).
-     */
-    public void setLoadtime()
-    {
-        this.loadtime = true;
-    }
-
-    /**
-     * Unsets "loadtime" mode.
-     */
-    public void unsetLoadtime()
-    {
-        this.loadtime = false;
-    }
-
-    /**
-     * Processes the given input using default values for userid (the hostname),
-     * botid (the first available bot), and no responder. The result is not
-     * returned. This method is mostly useful for a simple test of the Core.
+     * Processes the given input using default values for userid (the hostname), botid (the first available bot), and no
+     * responder. The result is not returned. This method is mostly useful for a simple test of the Core.
      * 
      * @param input the input to send
      */
     public synchronized void processResponse(String input)
     {
-        if (this.status == Status.READY)
+        if (this._status == Status.READY)
         {
-            Bot bot = this.bots.getABot();
+            Bot bot = this._bots.getABot();
             if (bot != null)
             {
-                this.multiplexor.getResponse(input, this.hostname, bot.getID());
+                getResponse(input, this._hostname, bot.getID());
                 return;
             }
-            this.logger.warn("No bot available to process response!");
+            this._logger.warn("No bot available to process response!");
             return;
         }
-        //throw new DeveloperError("Check that the Core is ready before sending it messages.", new CoreNotReadyException());
+        // throw new DeveloperError("Check that the Core is ready before sending it messages.", new
+        // CoreNotReadyException());
     }
 
     /**
-     * Returns the response to an input, using a default TextResponder.
+     * Returns the response to an input.
      * 
-     * @param input the &quot;non-internal&quot; (possibly multi-sentence,
-     *            non-substituted) input
+     * @param input the &quot;non-internal&quot; (possibly multi-sentence, non-substituted) input
      * @param userid the userid for whom the response will be generated
      * @param botid the botid from which to get the response
      * @return the response
      */
     public synchronized String getResponse(String input, String userid, String botid)
     {
-        if (this.status == Status.READY)
+        if (this._status == Status.READY)
         {
-            return this.multiplexor.getResponse(input, userid, botid);
+            // Get the specified bot object.
+            Bot bot = this._bots.get(botid);
+
+            // Split sentences (after performing substitutions).
+            List<String> sentenceList = bot.sentenceSplit(bot.applyInputSubstitutions(input));
+
+            // Get the replies.
+            List<String> replies = getReplies(sentenceList, userid, botid);
+
+            if (replies == null)
+            {
+                return null;
+            }
+
+            // Start by assuming an empty response.
+            StringBuilder responseBuffer = new StringBuilder("");
+
+            // Append each reply to the response.
+            for (String reply : replies)
+            {
+                responseBuffer.append(reply);
+            }
+
+            String response = responseBuffer.toString();
+
+            // Log the response.
+            logResponse(input, response, userid, botid);
+
+            // Return the response (may be just ""!)
+            return response;
         }
         // otherwise...
-        //throw new DeveloperError("Check that the Core is running before sending it messages.", new CoreNotReadyException());
+        // throw new DeveloperError("Check that the Core is running before sending it messages.", new
+        // CoreNotReadyException());
         return null;
     }
 
     /**
-     * Performs all necessary shutdown tasks. Shuts down the Graphmaster and all
-     * ManagedProcesses.
+     * Performs all necessary shutdown tasks. Shuts down the Graphmaster and all ManagedProcesses.
      */
     public void shutdown()
     {
-        this.logger.info("Program D is shutting down.");
-        this.processes.shutdownAll();
-        this.predicateMaster.saveAll();
-        this.logger.info("Shutdown complete.");
-        this.status = Status.SHUT_DOWN;
+        this._logger.info("Program D is shutting down.");
+        this._processes.shutdownAll();
+        this._predicateManager.saveAll();
+        this._logger.info("Shutdown complete.");
+        this._status = Status.SHUT_DOWN;
     }
 
     /**
-     * Notes the given Throwable and advises that the Core
-     * may no longer be stable.
+     * Notes the given Throwable and advises that the Core may no longer be stable.
      * 
      * @param e the Throwable to log
      */
@@ -685,8 +583,7 @@ public class Core
     }
 
     /**
-     * Notes the given Throwable and advises that the Core
-     * may no longer be stable.
+     * Notes the given Throwable and advises that the Core may no longer be stable.
      * 
      * @param t the thread in which the Throwable was thrown
      * @param e the Throwable to log
@@ -697,8 +594,7 @@ public class Core
     }
 
     /**
-     * Notes the given Throwable and advises that the Core
-     * may no longer be stable.
+     * Notes the given Throwable and advises that the Core may no longer be stable.
      * 
      * @param description the description of the Throwable
      * @param e the Throwable to log
@@ -709,8 +605,7 @@ public class Core
     }
 
     /**
-     * Notes the given Throwable and advises that the Core
-     * may no longer be stable.
+     * Notes the given Throwable and advises that the Core may no longer be stable.
      * 
      * @param description the description of the Throwable
      * @param t the thread in which the Throwable was thrown
@@ -718,8 +613,7 @@ public class Core
      */
     public void alert(String description, Thread t, Throwable e)
     {
-        String throwableDescription = e.getClass().getSimpleName() + " in thread \"" + t.getName()
-                + "\"";
+        String throwableDescription = e.getClass().getSimpleName() + " in thread \"" + t.getName() + "\"";
         if (e.getMessage() != null)
         {
             throwableDescription += ": " + e.getMessage();
@@ -728,10 +622,9 @@ public class Core
         {
             throwableDescription += ".";
         }
-        this.logger.error("Core may no longer be stable due to " + description + ":\n"
-                + throwableDescription);
+        this._logger.error("Core may no longer be stable due to " + description + ":\n" + throwableDescription);
 
-        if (this.settings.onUncaughtExceptionsPrintStackTrace())
+        if (this._settings.printStackTraceOnUncaughtExceptions())
         {
             if (e instanceof UserError || e instanceof DeveloperError)
             {
@@ -742,7 +635,6 @@ public class Core
                 e.printStackTrace(System.err);
             }
         }
-        //shutdown();
     }
 
     class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler
@@ -750,116 +642,83 @@ public class Core
         /**
          * Causes the Core to fail, with information about the exception.
          * 
-         * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread,
-         *      java.lang.Throwable)
+         * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread, java.lang.Throwable)
          */
         public void uncaughtException(Thread t, Throwable e)
         {
-            System.err.println("Uncaught exception " + e.getClass().getSimpleName()
-                    + " in thread \"" + t.getName() + "\".");
-            if (Core.this.settings.onUncaughtExceptionsPrintStackTrace())
+            System.err.println(String.format("Uncaught exception \"%s\" in thread \"%s\".", Errors.describe(e), t.getName()));
+            if (Core.this._settings.printStackTraceOnUncaughtExceptions())
             {
                 e.printStackTrace(System.err);
             }
-            Core.this.status = Core.Status.CRASHED;
-            System.err.println("Core has crashed.  Shutdown may not have completed properly.");
         }
     }
-    
+
     /**
-     * Loads bots from the indicated config file path.
+     * Loads bot(s) from the indicated config file path.
      * 
      * @param path the config file path
      */
-    public void loadBots(URL path)
+    public void loadBotConfig(URL path)
     {
-        if (this.settings.useWatcher())
+        if (this._settings.useAIMLWatcher())
         {
-            this.logger.debug("Suspending AIMLWatcher.");
-            this.aimlWatcher.stop();
+            this._logger.debug("Suspending AIMLWatcher.");
+            this._aimlWatcher.stop();
         }
-        if (path.getProtocol().equals(FileManager.FILE))
+        new BotsConfigurationFileParser(this).parse(path);
+        if (this._settings.useAIMLWatcher())
         {
-            FileManager.pushWorkingDirectory(URLTools.getParent(path));
-        }
-        try
-        {
-            new BotsConfigurationFileParser(this).process(path);
-        }
-        catch (ProcessorException e)
-        {
-            this.logger.error("Processor exception during startup: " + e.getExplanatoryMessage(), e);
-        }
-        if (path.getProtocol().equals(FileManager.FILE))
-        {
-            FileManager.popWorkingDirectory();
-        }
-        if (this.settings.useWatcher())
-        {
-            this.logger.debug("Restarting AIMLWatcher.");
-            this.aimlWatcher.start();
+            this._logger.debug("Restarting AIMLWatcher.");
+            this._aimlWatcher.start();
         }
     }
-    
-    /**
-     * Loads a bot from the given path.  Will only
-     * work right if the file at the path actually
-     * has a &gt;bot&lt; element as its root.
-     * 
-     * @param path the bot config file
-     * @return the id of the bot loaded
-     */
-    public String loadBot(URL path)
-    {
-        this.logger.info("Loading bot from \"" + path + "\".");
-        /*if (path.getProtocol().equals(FileManager.FILE))
-        {
-            FileManager.pushWorkingDirectory(URLTools.getParent(path));
-        }*/
 
-        String id = null;
-
-        try
-        {
-            id = new BotsConfigurationFileParser(this).processResponse(path);
-        }
-        catch (ProcessorException e)
-        {
-            this.logger.error(e.getExplanatoryMessage());
-        }
-        this.logger.info(String.format("Bot \"%s\" has been loaded.", id));
-        /*if (path.getProtocol().equals(FileManager.FILE))
-        {
-            FileManager.popWorkingDirectory();
-        }*/
-
-        return id;
-    }
-    
     /**
      * Unloads a bot with the given id.
      * 
      * @param id the bot to unload
      */
-    public void unloadBot(String id)
+    public void unload(String id)
     {
-        if (!this.bots.include(id))
+        if (!this._bots.containsKey(id))
         {
-            this.logger.warn("Bot \"" + id + "\" is not loaded; cannot unload.");
+            this._logger.warn("Bot \"" + id + "\" is not loaded; cannot unload.");
             return;
         }
-        Bot bot = this.bots.getBot(id);
+        Bot bot = this._bots.get(id);
         for (URL path : bot.getLoadedFilesMap().keySet())
         {
-            this.graphmaster.unload(path, bot);
+            this._graphmapper.unload(path, bot);
         }
-        this.bots.removeBot(id);
-        this.logger.info("Bot \"" + id + "\" has been unloaded.");
+        this._bots.remove(id);
+        this._logger.info("Bot \"" + id + "\" has been unloaded.");
+    }
+    
+    /**
+     * Adds the given bot to the core.
+     * 
+     * @param bot
+     */
+    public void addBot(Bot bot)
+    {
+        this._bots.put(bot.getID(), bot);
+    }
+    
+    /**
+     * Removes the given bot from the core, if it exists.
+     * 
+     * @param bot
+     * @return the bot if it was there, null if not
+     */
+    public Bot removeBot(Bot bot)
+    {
+        return this._bots.remove(bot);
     }
 
     /*
-     * All of these "get" methods throw a NullPointerException if the item has
-     * not yet been initialized, to avoid accidents.
+     * All of these "get" methods throw a NullPointerException if the item has not yet been initialized, to avoid
+     * accidents.
      */
 
     /**
@@ -867,67 +726,44 @@ public class Core
      */
     public Bots getBots()
     {
-        if (this.bots != null)
+        if (this._bots != null)
         {
-            return this.bots;
+            return this._bots;
         }
         throw new NullPointerException("The Core's Bots object has not yet been initialized!");
     }
-    
+
     /**
      * @param id the id of the bot desired
      * @return the requested bot
      */
     public Bot getBot(String id)
     {
-        return this.bots.getBot(id);
+        return this._bots.get(id);
     }
 
     /**
-     * @return the Graphmaster
+     * @return the Graphmapper
      */
-    public Graphmaster getGraphmaster()
+    public Graphmapper getGraphmapper()
     {
-        if (this.graphmaster != null)
+        if (this._graphmapper != null)
         {
-            return this.graphmaster;
+            return this._graphmapper;
         }
-        throw new NullPointerException(
-                "The Core's Graphmaster object has not yet been initialized!");
-    }
-
-    /**
-     * @return the Multiplexor
-     */
-    public Multiplexor getMultiplexor()
-    {
-        if (this.multiplexor != null)
-        {
-            return this.multiplexor;
-        }
-        throw new NullPointerException(
-                "The Core's Multiplexor object has not yet been initialized!");
+        throw new NullPointerException("The Core's Graphmapper object has not yet been initialized!");
     }
 
     /**
      * @return the PredicateMaster
      */
-    public PredicateMaster getPredicateMaster()
+    public PredicateManager getPredicateMaster()
     {
-        if (this.predicateMaster != null)
+        if (this._predicateManager != null)
         {
-            return this.predicateMaster;
+            return this._predicateManager;
         }
-        throw new NullPointerException(
-                "The Core's PredicateMaster object has not yet been initialized!");
-    }
-
-    /**
-     * @return the BotConfigurationElementProcessorRegistry
-     */
-    public BotConfigurationElementProcessorRegistry getBotConfigurationElementProcessorRegistry()
-    {
-        return this.botConfigurationElementProcessorRegistry;
+        throw new NullPointerException("The Core's PredicateMaster object has not yet been initialized!");
     }
 
     /**
@@ -935,7 +771,7 @@ public class Core
      */
     public AIMLProcessorRegistry getAIMLProcessorRegistry()
     {
-        return this.aimlProcessorRegistry;
+        return this._aimlProcessorRegistry;
     }
 
     /**
@@ -943,12 +779,11 @@ public class Core
      */
     public AIMLWatcher getAIMLWatcher()
     {
-        if (this.aimlWatcher != null)
+        if (this._aimlWatcher != null)
         {
-            return this.aimlWatcher;
+            return this._aimlWatcher;
         }
-        throw new NullPointerException(
-                "The Core's AIMLWatcher object has not yet been initialized!");
+        throw new NullPointerException("The Core's AIMLWatcher object has not yet been initialized!");
     }
 
     /**
@@ -956,12 +791,11 @@ public class Core
      */
     public CoreSettings getSettings()
     {
-        if (this.settings != null)
+        if (this._settings != null)
         {
-            return this.settings;
+            return this._settings;
         }
-        throw new NullPointerException(
-                "The Core's CoreSettings object has not yet been initialized!");
+        throw new NullPointerException("The Core's CoreSettings object has not yet been initialized!");
     }
 
     /**
@@ -969,12 +803,11 @@ public class Core
      */
     public Interpreter getInterpreter()
     {
-        if (this.interpreter != null)
+        if (this._interpreter != null)
         {
-            return this.interpreter;
+            return this._interpreter;
         }
-        throw new NullPointerException(
-                "The Core's Interpreter object has not yet been initialized!");
+        throw new NullPointerException("The Core's Interpreter object has not yet been initialized!");
     }
 
     /**
@@ -982,7 +815,7 @@ public class Core
      */
     public String getHostname()
     {
-        return this.hostname;
+        return this._hostname;
     }
 
     /**
@@ -990,7 +823,7 @@ public class Core
      */
     public ManagedProcesses getManagedProcesses()
     {
-        return this.processes;
+        return this._processes;
     }
 
     /**
@@ -998,7 +831,7 @@ public class Core
      */
     public Status getStatus()
     {
-        return this.status;
+        return this._status;
     }
 
     /**
@@ -1006,22 +839,428 @@ public class Core
      */
     public Document getPluginConfig()
     {
-        return this.pluginConfig;
+        return this._pluginConfig;
     }
-    
+
     /**
      * @return the base URL
      */
     public URL getBaseURL()
     {
-        return this.baseURL;
+        return this._baseURL;
     }
-    
+
     /**
      * @return the logger
      */
     public Logger getLogger()
     {
-        return this.logger;
+        return this._logger;
+    }
+
+    /**
+     * Gets an object from the class storage, using the given classname
+     * to look up the map for the class, then the given key to retrieve
+     * the object.  If the object is not found, then the given defaultObject
+     * is stored with the appropriate key, so it will be there next time.
+     * 
+     * @param <T> the type of object to retrieve
+     * @param classname the classname from whose map to retrieve
+     * @param key the key to retrieve
+     * @param defaultObject default object to use if none is found
+     * @return the object associated with this key
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getStoredObject(String classname, String key, T defaultObject)
+    {
+        Map<String, Object> storageMap = this.classStorage.get(classname);
+        if (storageMap == null)
+        {
+            storageMap = new HashMap<String, Object>();
+            this.classStorage.put(classname, storageMap);
+        }
+        Object object = storageMap.get(key);
+        if (object != null)
+        {
+            return (T) object;
+        }
+        storageMap.put(key, defaultObject);
+        return defaultObject;
+    }
+
+    /**
+     * @return the URL of the XML catalog
+     */
+    public URL getXMLCatalog()
+    {
+        return this._xmlCatalog;
+    }
+    
+    /**
+     * @return the URL of the XMLResolver configuration file
+     */
+    public URL getXMLResolverConfig()
+    {
+        return this._xmlresolverConfig;
+    }
+    
+    /**
+     * @return the XML parser feature settings
+     */
+    public Map<String, Boolean> getXMLParserFeatureSettings()
+    {
+        return this._xmlParserFeatureSettings;
+    }
+
+    /**
+     * Returns a database connection backed by a pooling driver.
+     * This is initialized lazily, since some people may not be
+     * using any database-based features.
+     * 
+     * @return a dbmanager
+     */
+    public Connection getDBConnection()
+    {
+        if (this._connectionPool == null)
+        {
+            try
+            {
+                Class.forName(this._settings.getDatabaseDriver());
+            }
+            catch (ClassNotFoundException e)
+            {
+                throw new UserError("Could not find your database driver.", e);
+            }
+            this._connectionPool = new GenericObjectPool();
+            ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(this._settings.getDatabaseURL(),
+                    this._settings.getDatabaseUsername(), this._settings.getDatabasePassword());
+            new PoolableConnectionFactory(connectionFactory, this._connectionPool, null, null, false, true);
+            PoolingDriver driver = new PoolingDriver();
+            driver.registerPool("programd", this._connectionPool);
+        }
+        try
+        {
+            return DriverManager.getConnection("jdbc:apache:commons:dbcp:programd");
+        }
+        catch (SQLException e)
+        {
+            this._logger.error("SQL exception when getting a db connection.", e);
+            return null;
+        }
+    }
+
+    /**
+     * <p>
+     * Produces a response to an &quot;internal&quot; input sentence -- i.e., an
+     * input that has been produced by a <code>srai</code>.
+     * </p>
+     * <p>
+     * This method
+     * takes an already-existing <code>TemplateParser</code>, <i>doesn't </i>
+     * take a <code>Responder</code>, and assumes that the inputs have
+     * already been normalized.
+     * </p>
+     * 
+     * @param input the input sentence
+     * @param userid the userid requesting the response
+     * @param botid the botid from which to get the response
+     * @param parser the parser object to update when generating the response
+     * @return the response
+     */
+    @SuppressWarnings("boxing")
+    public String getInternalResponse(String input, String userid, String botid, TemplateParser parser)
+    {
+        // Get the requested bot.
+        Bot bot = this._bots.get(botid);
+
+        String _input = input;
+        parser.addInput(_input);
+
+        // Ready the that and topic predicates for constructing the match path.
+        List<String> thatSentences = bot.sentenceSplit(this._predicateManager.get("that", 1, userid, botid));
+        String that = InputNormalizer.patternFitIgnoreCase(thatSentences.get(thatSentences.size() - 1));
+
+        if ("".equals(that) || that.equals(this._predicateEmptyDefault))
+        {
+            that = "*";
+        }
+        parser.addThat(that);
+
+        String topic = this._predicateManager.get("topic", userid, botid);
+        if ("".equals(topic) || topic.equals(this._predicateEmptyDefault))
+        {
+            topic = "*";
+        }
+        parser.addTopic(topic);
+
+        // Verify we've been tracking thats and topics correctly.
+        List<String> inputs = parser.getInputs();
+        List<String> thats = parser.getThats();
+        List<String> topics = parser.getTopics();
+        int stackSize = inputs.size();
+        assert stackSize == thats.size() && thats.size() == topics.size() : String.format(
+                "%d inputs, %d thats, %d topics", stackSize, thats.size(), topics.size());
+
+        // Check for some simple kinds of infinite loops.
+        if (stackSize > 1)
+        {
+            for (int lookback = stackSize - 2; lookback > -1; lookback--)
+            {
+                String comparisonInput = inputs.get(lookback);
+                String comparisonThat = thats.get(lookback);
+                String comparisonTopic = topics.get(lookback);
+                String infiniteLoopInput = parser.getCore().getSettings().getInfiniteLoopInput();
+                if (that.equalsIgnoreCase(comparisonThat) && topic.equalsIgnoreCase(comparisonTopic))
+                {
+                    if (_input.equalsIgnoreCase(infiniteLoopInput))
+                    {
+                        this._matchLogger.error("Unrecoverable infinite loop.");
+                        return "";
+                    }
+                    if (_input.equalsIgnoreCase(comparisonInput))
+                    {
+                        _input = infiniteLoopInput;
+                        inputs.set(stackSize - 1, infiniteLoopInput);
+                        this._matchLogger.warn(String.format("Infinite loop detected; substituting \"%s\".",
+                                infiniteLoopInput));
+                    }
+                }
+            }
+        }
+
+        return getMatchResult(_input, that, topic, userid, botid, parser);
+    }
+
+    /**
+     * Gets the list of replies to some input sentences. Assumes that the
+     * sentences have already had all necessary pre-processing and substitutions
+     * performed.
+     * 
+     * @param sentenceList the input sentences
+     * @param userid the userid requesting the replies
+     * @param botid
+     * @return the list of replies to the input sentences
+     */
+    @SuppressWarnings("boxing")
+    protected List<String> getReplies(List<String> sentenceList, String userid, String botid)
+    {
+        if (sentenceList == null)
+        {
+            return null;
+        }
+
+        // All replies will be assembled in this ArrayList.
+        List<String> replies = Collections.checkedList(new ArrayList<String>(sentenceList.size()), String.class);
+
+        // Get the requested bot.
+        Bot bot = this._bots.get(botid);
+
+        // Ready the that and topic predicates for constructing the match path.
+        List<String> thatSentences = bot.sentenceSplit(this._predicateManager.get("that", 1, userid, botid));
+        String that = null;
+        if (thatSentences.size() > 0)
+        {
+            that = InputNormalizer.patternFitIgnoreCase(thatSentences.get(thatSentences.size() - 1));
+        }
+
+        if (that == null || "".equals(that) || that.equals(this._predicateEmptyDefault))
+        {
+            that = "*";
+        }
+
+        String topic = InputNormalizer.patternFitIgnoreCase(this._predicateManager.get("topic", userid, botid));
+        if ("".equals(topic) || topic.equals(this._predicateEmptyDefault))
+        {
+            topic = "*";
+        }
+
+        // We might use this to track matching statistics.
+        long time = 0;
+
+        // Mark the time just before matching starts.
+        time = System.currentTimeMillis();
+
+        // Get a reply for each sentence.
+        for (String sentence : sentenceList)
+        {
+            replies.add(getReply(sentence, that, topic, userid, botid));
+        }
+
+        // Increment the (static) response count.
+        this._responseCount++;
+
+        // Produce statistics about the response time.
+        // Mark the time that processing is finished.
+        time = System.currentTimeMillis() - time;
+
+        // Calculate the average response time.
+        this._totalTime += time;
+        this._avgResponseTime = (float) this._totalTime / (float) this._responseCount;
+        if (this._matchLogger.isDebugEnabled())
+        {
+            this._matchLogger.debug(String.format("Response %d in %dms. (Average: %.2fms)", this._responseCount, time,
+                    this._avgResponseTime));
+        }
+
+        // Invoke targeting if appropriate.
+        /*
+         * if (responseCount % TARGET_SKIP == 0) { if (USE_TARGETING) {
+         * Graphmaster.checkpoint(); } }
+         */
+
+        // If no replies, return an empty string.
+        if (replies.size() == 0)
+        {
+            replies.add("");
+        }
+        return replies;
+    }
+
+    /**
+     * Gets a reply to an input. Assumes that the input has already had all
+     * necessary substitutions and pre-processing performed, and that the input
+     * is a single sentence.
+     * 
+     * @param input the input sentence
+     * @param that the input that value
+     * @param topic the input topic value
+     * @param userid the userid requesting the reply
+     * @param botid
+     * @return the reply to the input sentence
+     */
+    protected String getReply(String input, String that, String topic, String userid, String botid)
+    {
+        // Push the input onto the <input/> stack.
+        this._predicateManager.push("input", input, userid, botid);
+
+        // Create a new TemplateParser.
+        TemplateParser parser = new TemplateParser(input, that, topic, userid, botid, this);
+
+        String reply = getMatchResult(input, that, topic, userid, botid, parser);
+        if (reply == null)
+        {
+            this._logger.error("getMatchReply generated a null reply!", new NullPointerException("Null reply."));
+            return "";
+        }
+
+        // Push the reply onto the <that/> stack.
+        this._predicateManager.push("that", reply, userid, botid);
+
+        return reply;
+    }
+
+    /**
+     * Gets the match result from the Graphmaster.
+     * 
+     * @param input the input to match
+     * @param that the current that value
+     * @param topic the current topic value
+     * @param userid the userid for whom to perform the match
+     * @param botid the botid for whom to perform the match
+     * @param parser the parser to use
+     * @return the match result
+     */
+    protected String getMatchResult(String input, String that, String topic, String userid, String botid,
+            TemplateParser parser)
+    {
+        // Show the input path.
+        if (this._matchLogger.isDebugEnabled())
+        {
+            this._matchLogger.debug(String.format("[INPUT (%s)] %s:%s:%s:%s", userid, input, that, topic, botid));
+        }
+
+        Match match = null;
+
+        try
+        {
+            match = this._graphmapper.match(InputNormalizer.patternFitIgnoreCase(input), that, topic, botid);
+        }
+        catch (NoMatchException e)
+        {
+            this._logger.warn(e.getMessage());
+            return "";
+        }
+
+        if (match == null)
+        {
+            this._logger.warn(String.format("No match found for input \"%s\".", input));
+            return "";
+        }
+
+        if (this._matchLogger.isDebugEnabled())
+        {
+            this._matchLogger.debug(String.format("[MATCH (%s)] %s (\"%s\")", userid, match.getPath(), match.getFileNames()));
+        }
+
+        parser.addMatch(match);
+
+        String template = match.getTemplate();
+        String reply = null;
+
+        try
+        {
+            reply = parser.processResponse(template, match.getFileNames().get(0));
+        }
+        catch (Throwable e)
+        {
+            // Log the error message.
+            this._logger.error(String.format("Error while processing response: \"%s\"", Errors.describe(e)), e);
+
+            // Set response to empty string.
+            return "";
+        }
+        return reply;
+    }
+
+    /**
+     * Logs a response to the chat log.
+     * 
+     * @param input the input that produced the response
+     * @param response the response
+     * @param userid the userid for whom the response was produced
+     * @param botid the botid that produced the response
+     */
+    protected void logResponse(String input, String response, String userid, String botid)
+    {
+        /*
+         * NOTA BENE: This is a very specific workaround for a problem with the log4j
+         * JDBCAppender.  It appears that the appender fails to maintain the database
+         * connection after some period of time, and thus stops working.  Here, we
+         * catch the exception thrown in this case, and force log4j to reinitialize
+         * the appender.  This is horribly specific and should go away as soon as possible.
+         * - 2006-03-29, NB
+         */
+        try
+        {
+            this._logger.callAppenders(new ChatLogEvent(botid, userid, input, response));
+        }
+        catch (Exception e)
+        {
+            this._logger
+                    .error(
+                            "A known bug with log4j has been encountered.  Attempting to reset logging configuration. This may or may not work.",
+                            e);
+            LogManager.resetConfiguration();
+        }
+    }
+
+    /**
+     * Returns the average response time.
+     * 
+     * @return the average response time
+     */
+    public float averageResponseTime()
+    {
+        return this._avgResponseTime;
+    }
+
+    /**
+     * Returns the number of queries per hour.
+     * 
+     * @return the number of queries per hour
+     */
+    public float queriesPerHour()
+    {
+        return this._responseCount / ((System.currentTimeMillis() - this._startTime) / 3600000.00f);
     }
 }

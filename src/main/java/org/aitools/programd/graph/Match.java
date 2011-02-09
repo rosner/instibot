@@ -10,110 +10,133 @@
 package org.aitools.programd.graph;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.aitools.programd.util.InputNormalizer;
 
 /**
- * <code>Match</code> implements an object to store the results of matching,
- * most notably the stacks resulting from multiple input/that/topic wildcards.
+ * <code>Match</code> implements an object to store the results of matching, most notably the stacks resulting from
+ * multiple input/that/topic wildcards.
  */
 public class Match
 {
     // Instance variables.
 
     /** The portions of the input captured by wildcards. */
-    private ArrayList<String> inputStars = new ArrayList<String>();
+    private ArrayList<String> _inputStars = new ArrayList<String>();
 
     /** The portions of the &lt;that/&gt; captured by wildcards. */
-    private ArrayList<String> thatStars = new ArrayList<String>();
+    private ArrayList<String> _thatStars = new ArrayList<String>();
 
-    /**
-     * The portions of the &lt;topic/&gt; <code>name</code> captured by
-     * wildcards.
-     */
-    private ArrayList<String> topicStars = new ArrayList<String>();
+    /** The portions of the &lt;topic/&gt; <code>name</code> captured by wildcards. */
+    private ArrayList<String> _topicStars = new ArrayList<String>();
 
     /** The <code>pattern</code> part of the matched path. */
-    private String pattern;
+    private String _pattern;
 
     /** The <code>that</code> part of the matched path. */
-    private String that;
+    private String _that;
 
     /** The <code>topic</code> part of the matched path. */
-    private String topic;
+    private String _topic;
 
     /** The <code>botid</code> part of the matched path. */
-    private String botid;
+    private String _botid;
 
-    /** The nodemapper that resulted from this match. */
-    private Nodemapper nodemapper;
+    /** The <code>template</code> associated with the matched path. */
+    private String _template;
 
-    // Convenience constants.
+    /** The <code>filenames</code> from which the matched path came. */
+    private List<String> _filenames;
 
-    /** A space. */
-    public static final String SPACE = " ";
-
-    /** The string used to separate path components. */
-    private static final String SPACED_PATH_SEPARATOR = SPACE + Graphmaster.PATH_SEPARATOR + SPACE;
-
-    /**
-     * Pushes a new input star onto the input stack.
-     * 
-     * @param string the string to push onto the input stack
-     */
-    public void pushInputWildcardContent(String string)
+    /** Match states. */
+    public static enum State implements Comparable<Match.State>
     {
-        this.inputStars.add(0, string);
+        /** Trying to match the input part of the path. */
+        IN_INPUT,
+
+        /** Trying to match the that part of the path. */
+        IN_THAT,
+
+        /** Trying to match the topic part of the path. */
+        IN_TOPIC,
+
+        /** Trying to match the botid part of the path. */
+        IN_BOTID;
+        
+        /**
+         * @return the value of the state that precedes this one
+         */
+        public State preceding()
+        {
+            switch (this)
+            {
+                case IN_BOTID:
+                    return IN_TOPIC;
+                case IN_TOPIC:
+                    return IN_THAT;
+                case IN_THAT:
+                    return IN_INPUT;
+                case IN_INPUT:
+                default:
+                    throw new IllegalArgumentException("No state precedes IN_INPUT!");
+            }
+        }
     }
 
     /**
-     * Pushes a new that star onto the thatstar stack.
-     * 
-     * @param string the string to push onto the thatstar stack
+     * Pushes content onto the wildcard stack for the given match state.
+     *
+     * @param state the state onto whose wildcard stack the string should be pushed
+     * @param string the string to push onto the stack
      */
-    public void pushThatWildcardContent(String string)
+    public void pushWildcardContent(State state, String string)
     {
-        this.thatStars.add(0, string);
+        switch (state)
+        {
+            case IN_INPUT:
+                this._inputStars.add(0, string);
+                break;
+                
+            case IN_THAT:
+                this._thatStars.add(0, string);
+                break;
+                
+            case IN_TOPIC:
+                this._topicStars.add(0, string);
+                break;
+                
+            case IN_BOTID:
+                throw new IllegalArgumentException("No wildcard content for botids!");
+        }
     }
 
     /**
-     * Pushes a new topic star onto the topicstar stack.
+     * Sets the indicated component of the matched path.
      * 
-     * @param string the string to push onto the topicstar stack
+     * @param state the match state corresponding to the match path component
+     * @param string the value of the match path component
      */
-    public void pushTopicWildcardContent(String string)
+    public void setPathComponent(Match.State state, String string)
     {
-        this.topicStars.add(0, string);
-    }
-
-    /**
-     * Sets the <code>pattern</code> part of the matched path.
-     * 
-     * @param string the <code>pattern</code> part of the matched path
-     */
-    public void setPattern(String string)
-    {
-        this.pattern = string;
-    }
-
-    /**
-     * Sets the <code>that</code> part of the matched path.
-     * 
-     * @param string the <code>that</code> part of the matched path
-     */
-    public void setThat(String string)
-    {
-        this.that = string;
-    }
-
-    /**
-     * Sets the <code>topic</code> part of the matched path.
-     * 
-     * @param string the <code>topic</code> part of the matched path
-     */
-    public void setTopic(String string)
-    {
-        this.topic = string;
+        switch (state)
+        {
+            case IN_INPUT:
+                this._pattern = string;
+                break;
+                
+            case IN_THAT:
+                this._that = string;
+                break;
+                
+            case IN_TOPIC:
+                this._topic = string;
+                break;
+                
+            case IN_BOTID:
+                this._botid = string;
+                break;
+        }
     }
 
     /**
@@ -123,18 +146,28 @@ public class Match
      */
     public void setBotID(String string)
     {
-        this.botid = string;
+        this._botid = string;
     }
 
     /**
-     * Set the match-resulting nodemapper.
+     * Sets the <code>template</code> part of the matched path.
      * 
-     * @param nodemapperToSet the match-resulting nodemapper
+     * @param string the <code>botid</code> part of the matched path
      */
-
-    public void setNodemapper(Nodemapper nodemapperToSet)
+    public void setTemplate(String string)
     {
-        this.nodemapper = nodemapperToSet;
+        this._template = string;
+    }
+
+    /**
+     * Sets the <code>filename</code> part of the matched path
+     * (this list may have 1 or more members).
+     * 
+     * @param filenames the <code>filename</code> part of the matched path
+     */
+    public void setFilenames(List<String> filenames)
+    {
+        this._filenames = filenames;
     }
 
     /**
@@ -144,7 +177,7 @@ public class Match
      */
     public String getPattern()
     {
-        return this.pattern;
+        return this._pattern;
     }
 
     /**
@@ -154,7 +187,7 @@ public class Match
      */
     public String getThat()
     {
-        return this.that;
+        return this._that;
     }
 
     /**
@@ -164,7 +197,7 @@ public class Match
      */
     public String getTopic()
     {
-        return this.topic;
+        return this._topic;
     }
 
     /**
@@ -174,19 +207,8 @@ public class Match
      */
     public String getPath()
     {
-        return InputNormalizer.patternFit(this.pattern) + SPACED_PATH_SEPARATOR + InputNormalizer.patternFit(this.that) + SPACED_PATH_SEPARATOR
-                + InputNormalizer.patternFit(this.topic) + SPACED_PATH_SEPARATOR + this.botid;
-    }
-
-    /**
-     * Returns the match-resulting nodemapper.
-     * 
-     * @return the match-resulting nodemapper
-     */
-
-    public Nodemapper getNodemapper()
-    {
-        return this.nodemapper;
+        return String.format("%s:%s:%s:%s", InputNormalizer.patternFit(this._pattern), InputNormalizer.patternFit(this._that),
+                InputNormalizer.patternFit(this._topic), this._botid);
     }
 
     /**
@@ -196,17 +218,17 @@ public class Match
      */
     public String getTemplate()
     {
-        return (String) this.nodemapper.get(Graphmaster.TEMPLATE);
+        return this._template;
     }
 
     /**
-     * Gets the filename from which the &lt;template/&gt; originally came.
+     * Gets the filenames from which the &lt;template/&gt; originally came.
      * 
-     * @return the filename from which the &lt;template/&gt; originally came
+     * @return the filenames from which the &lt;template/&gt; originally came
      */
-    public String getFileName()
+    public List<String> getFileNames()
     {
-        return (String) this.nodemapper.get(Graphmaster.FILENAME);
+        return this._filenames;
     }
 
     /**
@@ -216,7 +238,7 @@ public class Match
      */
     public ArrayList<String> getInputStars()
     {
-        return this.inputStars;
+        return this._inputStars;
     }
 
     /**
@@ -226,7 +248,7 @@ public class Match
      */
     public ArrayList<String> getThatStars()
     {
-        return this.thatStars;
+        return this._thatStars;
     }
 
     /**
@@ -236,6 +258,6 @@ public class Match
      */
     public ArrayList<String> getTopicStars()
     {
-        return this.topicStars;
+        return this._topicStars;
     }
 }

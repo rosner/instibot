@@ -9,11 +9,10 @@
 
 package org.aitools.programd.interfaces.shell;
 
-
 import org.aitools.programd.Core;
-import org.aitools.programd.graph.Graphmaster;
-import org.aitools.programd.util.FileManager;
-import org.aitools.programd.util.URLTools;
+import org.aitools.programd.graph.Graphmapper;
+import org.aitools.util.resource.Filesystem;
+import org.aitools.util.resource.URLTools;
 import org.apache.log4j.Logger;
 
 /**
@@ -24,13 +23,13 @@ public class LoadCommand extends ShellCommand
 {
     /** Shell command string. */
     public static final String COMMAND_STRING = "/load";
-    
+
     /** Argument template. */
     public static final String ARGUMENT_TEMPLATE = "filename";
-    
+
     /** Shell help line. */
     private static final String HELP_LINE = "loads/reloads given filename for active bot";
-    
+
     /**
      * Creates a new LoadCommand.
      */
@@ -65,12 +64,12 @@ public class LoadCommand extends ShellCommand
         else
         {
             Core core = shell.getCore();
-            Graphmaster graphmaster = core.getGraphmaster();
-            int categories = graphmaster.getCategoryCount();
+            Graphmapper graphmapper = core.getGraphmapper();
+            int categories = graphmapper.getCategoryCount();
             String path = commandLine.substring(space + 1);
-            core.load(URLTools.contextualize(FileManager.getWorkingDirectory(), path), shell.getCurrentBotID());
+            core.load(URLTools.contextualize(Filesystem.getWorkingDirectory(), path), shell.getCurrentBotID());
             Logger.getLogger("programd").info(
-                    graphmaster.getCategoryCount() - categories + " categories loaded from \"" + path + "\".");
+                    graphmapper.getCategoryCount() - categories + " categories loaded from \"" + path + "\".");
         }
     }
 }

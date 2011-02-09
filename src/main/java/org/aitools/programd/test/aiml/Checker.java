@@ -2,14 +2,14 @@ package org.aitools.programd.test.aiml;
 
 import java.io.UnsupportedEncodingException;
 
-import org.aitools.programd.util.DeveloperError;
-import org.w3c.dom.Element;
+import org.aitools.util.runtime.DeveloperError;
+import org.aitools.util.xml.Characters;
+import org.jdom.Element;
 
 /**
  * Performs a specific test on a given input.
  * 
  * @author Albertas Mickensas
- * @since 4.5
  */
 abstract public class Checker
 {
@@ -43,7 +43,7 @@ abstract public class Checker
     {
         // Do nothing.
     }
-    
+
     /**
      * Creates a new Checker of the correct type based on the contents of the
      * given XML element.
@@ -54,18 +54,18 @@ abstract public class Checker
      */
     public static Checker create(Element element, String encoding)
     {
-        String tagName = element.getTagName();
+        String tagName = element.getName();
 
         // Create the appropriate type of Checker.
         if (tagName.equals(TAG_ALERT_KEYWORDS))
         {
             try
             {
-                return new AlertKeywordChecker(new String(element.getTextContent().getBytes(encoding)).intern());
+                return new AlertKeywordChecker(new String(Characters.unescapeXMLChars(element.getText()).getBytes(encoding)).intern());
             }
             catch (UnsupportedEncodingException e)
             {
-                throw new DeveloperError("Platform does not support \"" + encoding + "\" encoding!", e);
+                throw new DeveloperError(String.format("Platform does not support \"%s\" encoding!", encoding), e);
             }
         }
         else if (tagName.equals(TAG_EXPECTED_ANSWER))
@@ -76,47 +76,47 @@ abstract public class Checker
         {
             try
             {
-                return new ExpectedKeywordChecker(new String(element.getTextContent().getBytes(encoding)).intern());
+                return new ExpectedKeywordChecker(new String(Characters.unescapeXMLChars(element.getText()).getBytes(encoding)).intern());
             }
             catch (UnsupportedEncodingException e)
             {
-                throw new DeveloperError("Platform does not support \"" + encoding + "\" encoding!", e);
+                throw new DeveloperError(String.format("Platform does not support \"%s\" encoding!", encoding), e);
             }
         }
         else if (tagName.equals(TAG_EXPECTED_LENGTH))
         {
             try
             {
-                return new LengthChecker(new String(element.getTextContent().getBytes(encoding)).intern());
+                return new LengthChecker(new String(element.getText().getBytes(encoding)).intern());
             }
             catch (UnsupportedEncodingException e)
             {
-                throw new DeveloperError("Platform does not support \"" + encoding + "\" encoding!", e);
+                throw new DeveloperError(String.format("Platform does not support \"%s\" encoding!", encoding), e);
             }
         }
         else if (tagName.equals(TAG_EXPECTED_MATCH))
         {
             try
             {
-                return new MatchChecker(new String(element.getTextContent().getBytes(encoding)).intern());
+                return new MatchChecker(new String(Characters.unescapeXMLChars(element.getText()).getBytes(encoding)).intern());
             }
             catch (UnsupportedEncodingException e)
             {
-                throw new DeveloperError("Platform does not support \"" + encoding + "\" encoding!", e);
+                throw new DeveloperError(String.format("Platform does not support \"%s\" encoding!", encoding), e);
             }
         }
         else
         {
-            throw new DeveloperError("Some invalid element (\"" + tagName
-                    + "\") slipped past the schema!", new IllegalArgumentException());
+            throw new DeveloperError(String.format("Some invalid element (\"%s\") slipped past the schema!", tagName),
+                    new IllegalArgumentException());
         }
     }
-    
+
     /**
      * @return the textual content of the checker
      */
     abstract public String getContent();
-    
+
     /**
      * @return the tag name that the checker uses
      */

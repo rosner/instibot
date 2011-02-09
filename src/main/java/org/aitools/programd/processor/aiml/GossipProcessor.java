@@ -12,21 +12,18 @@ package org.aitools.programd.processor.aiml;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
-import org.aitools.programd.util.DeveloperError;
-import org.aitools.programd.util.FileManager;
-import org.aitools.programd.util.UserError;
+import org.aitools.util.runtime.DeveloperError;
+import org.aitools.util.resource.Filesystem;
+import org.aitools.util.runtime.UserError;
 
 /**
- * Handles a
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-gossip">gossip</a></code>
- * element.
+ * Handles a <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-gossip">gossip</a></code> element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author Thomas Ringate, Pedro Colla
  */
@@ -36,36 +33,34 @@ public class GossipProcessor extends AIMLProcessor
     public static final String label = "gossip";
 
     private static FileWriter gossipFile;
-    
-    private static final String LI_START = "<li>";
-
-    private static final String LI_END_LINE_SEPARATOR = "</li>" + System.getProperty("line.separator", "\n");
 
     /**
      * Creates a new GossipProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public GossipProcessor(Core coreToUse)
+    public GossipProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
         // Get the gossip.
-        String response = parser.evaluate(element.getChildNodes());
-        
+        String response = parser.evaluate(element.getContent());
+
         // Initialize the FileWriter if necessary.
         if (gossipFile == null)
         {
             try
             {
-                gossipFile = new FileWriter(FileManager.checkOrCreate(parser.getCore().getSettings().getGossipPath().getPath(), "gossip file"));
+                gossipFile = new FileWriter(Filesystem.checkOrCreate(parser.getCore().getSettings().getGossipURL()
+                        .getPath(), "gossip file"));
             }
             catch (IOException e)
             {
@@ -76,13 +71,13 @@ public class GossipProcessor extends AIMLProcessor
         // Put the gossip in the log.
         try
         {
-            gossipFile.append(LI_START + response + LI_END_LINE_SEPARATOR);
+            gossipFile.append(String.format("<li>%s</li>%n", response));
             gossipFile.flush();
         }
         catch (IOException e)
         {
             throw new DeveloperError("Error trying to write gossip.", e);
         }
-        return EMPTY_STRING;
+        return "";
     }
 }

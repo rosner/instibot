@@ -9,18 +9,16 @@
 
 package org.aitools.programd.processor.aiml;
 
-import org.w3c.dom.Element;
+import org.jdom.Element;
 
 import org.aitools.programd.Core;
 import org.aitools.programd.parser.TemplateParser;
 import org.aitools.programd.processor.ProcessorException;
 
 /**
- * Handles an
- * <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-uppercase">uppercase</a></code>
+ * Handles an <code><a href="http://aitools.org/aiml/TR/2001/WD-aiml/#section-uppercase">uppercase</a></code>
  * element.
  * 
- * @version 4.5
  * @author Jon Baer
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
@@ -32,19 +30,20 @@ public class UpperCaseProcessor extends AIMLProcessor
     /**
      * Creates a new UpperCaseProcessor using the given Core.
      * 
-     * @param coreToUse the Core object to use
+     * @param core the Core object to use
      */
-    public UpperCaseProcessor(Core coreToUse)
+    public UpperCaseProcessor(Core core)
     {
-        super(coreToUse);
+        super(core);
     }
 
     /**
      * @see AIMLProcessor#process(Element, TemplateParser)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public String process(Element element, TemplateParser parser) throws ProcessorException
     {
-        return parser.evaluate(element.getChildNodes()).toUpperCase();
+        return parser.evaluate(element.getContent()).toUpperCase();
     }
 }

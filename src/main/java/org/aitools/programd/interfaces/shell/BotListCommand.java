@@ -13,16 +13,15 @@ package org.aitools.programd.interfaces.shell;
  * Prints a list of active bots to the shell console.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
- * @since 4.5
  */
 public class BotListCommand extends ShellCommand
 {
     /** Shell command. */
     public static final String COMMAND_STRING = "/bots";
-    
+
     /** Argument template. */
     public static final String ARGUMENT_TEMPLATE = "";
-    
+
     /** Shell help line. */
     private static final String HELP_LINE = "lists loaded bots";
 
@@ -48,8 +47,9 @@ public class BotListCommand extends ShellCommand
      * @see org.aitools.programd.interfaces.shell.ShellCommand#handle(java.lang.String, org.aitools.programd.interfaces.shell.Shell)
      */
     @Override
-    public void handle(@SuppressWarnings("unused") String commandLine, Shell shell)
+    @SuppressWarnings("unused")
+    public void handle(String commandLine, Shell shell)
     {
-        shell.showMessage("Active bots: " + shell.getBots().getNiceList());
+        shell.showMessage("Active bots: " + shell.getBots().toString());
     }
 }

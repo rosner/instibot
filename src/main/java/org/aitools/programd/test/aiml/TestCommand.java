@@ -12,7 +12,7 @@ package org.aitools.programd.test.aiml;
 import java.net.URL;
 import java.util.List;
 
-import org.aitools.programd.bot.Bot;
+import org.aitools.programd.Bot;
 import org.aitools.programd.interfaces.shell.Shell;
 import org.aitools.programd.interfaces.shell.ShellCommand;
 import org.apache.log4j.LogManager;
@@ -86,20 +86,17 @@ public class TestCommand extends ShellCommand
             }
         }
         String botid = shell.getCurrentBotID();
-        Bot bot = shell.getBots().getBot(botid);
+        Bot bot = shell.getBots().get(botid);
         List<URL> testSuites = bot.getTestSuites();
         URL testReportDirectory = bot.getTestReportDirectory();
         if (testSuites != null && testReportDirectory != null)
         {
-            new Tester(shell.getCore(),
-                    LogManager.getLogger("programd.testing"),
-                    testSuites,
-                    testReportDirectory).run(shell
-                    .getCurrentBotID(), suite, runCount);
+            new Tester(shell.getCore(), LogManager.getLogger("programd.testing"), testSuites, testReportDirectory).run(
+                    shell.getCurrentBotID(), suite, runCount);
         }
         else
         {
-            shell.showError("Bot " + botid + " is not configured for testing.");
+            shell.showError(String.format("Bot %s is not configured for testing.", botid));
         }
     }
 
