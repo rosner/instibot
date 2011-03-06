@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
-public class OneOptimalMemoryNodemapper extends AbstractNodemaster
+public class OneOptimalMemoryNodemapper extends AbstractNodemapper
 {
     protected int size = 0;
 
@@ -220,18 +220,18 @@ public class OneOptimalMemoryNodemapper extends AbstractNodemaster
         double total = 0d;
         if (this.size == 1)
         {
-            if (this._value != null && this._value instanceof AbstractNodemaster)
+            if (this._value != null && this._value instanceof AbstractNodemapper)
             {
-                total = ((AbstractNodemaster) this._value).getAverageSize();
+                total = ((AbstractNodemapper) this._value).getAverageSize();
             }
         }
         else
         {
             for (Object object : this.hidden.values())
             {
-                if (object instanceof AbstractNodemaster)
+                if (object instanceof AbstractNodemapper)
                 {
-                    total += ((AbstractNodemaster) object).getAverageSize();
+                    total += ((AbstractNodemapper) object).getAverageSize();
                 }
             }
         }

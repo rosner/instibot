@@ -12,18 +12,21 @@ package org.aitools.programd.graph;
 import java.util.Set;
 
 /**
- * A <code>Nodemapper</code> maps the branches in a {@link MemoryGraphmapper} structure.
+ * A <code>Nodemapper</code> maps the branches in a {@link MemoryGraphmapper}
+ * structure.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  * @author Richard Wallace
  */
-public interface Nodemapper
-{
+public interface Nodemapper {
     /**
      * Puts an object into the <code>Nodemapper</code>.
      * 
-     * @param key the key with which the object should be stored / will be retrieved
-     * @param value the object to be stored
+     * @param key
+     *            the key with which the object should be stored / will be
+     *            retrieved
+     * @param value
+     *            the object to be stored
      * @return the same object that is stored
      */
     public Object put(String key, Object value);
@@ -31,7 +34,8 @@ public interface Nodemapper
     /**
      * Gets an object from the <code>Nodemapper</code>.
      * 
-     * @param key the key to use in retrieving the object
+     * @param key
+     *            the key to use in retrieving the object
      * @return the object with that key (if found)
      */
     public Object get(String key);
@@ -39,7 +43,8 @@ public interface Nodemapper
     /**
      * Removes a node from the <code>Nodemapper</code>.
      * 
-     * @param value the value to remove
+     * @param value
+     *            the value to remove
      */
     public void remove(Object value);
 
@@ -53,8 +58,10 @@ public interface Nodemapper
     /**
      * Tells whether the <code>Nodemapper</code> contains the given key.
      * 
-     * @param key the key to look for
-     * @return boolean indicating whether the <code>Nodemapper</code> contains the key
+     * @param key
+     *            the key to look for
+     * @return boolean indicating whether the <code>Nodemapper</code> contains
+     *         the key
      */
     public boolean containsKey(String key);
 
@@ -68,7 +75,8 @@ public interface Nodemapper
     /**
      * Sets the parent of the <code>Nodemapper</code>
      * 
-     * @param parent the parent of the <code>Nodemapper</code>
+     * @param parent
+     *            the parent of the <code>Nodemapper</code>
      */
     public void setParent(Nodemapper parent);
 
@@ -78,7 +86,7 @@ public interface Nodemapper
      * @return the parent of the <code>Nodemapper</code>
      */
     public Nodemapper getParent();
-    
+
     /**
      * Returns the height of the <code>Nodemapper</code>. The height is the
      * minimum number of words needed to reach a leaf node from here.
@@ -88,17 +96,18 @@ public interface Nodemapper
     public int getHeight();
 
     /**
-     * Sets the height of this <code>Nodemapper</code> to &quot;top&quot;, i.e. <code>0</code> (zero), causing each
-     * ancestor <code>n</code> to have a minimum height of <code>n</code>, unless the ancestor is the root node.
+     * Sets the height of this <code>Nodemapper</code> to &quot;top&quot;, i.e.
+     * <code>0</code> (zero), causing each ancestor <code>n</code> to have a
+     * minimum height of <code>n</code>, unless the ancestor is the root node.
      */
     public void setTop();
 
     /**
      * Returns a weighted average of the sizes of this <code>Nodemapper</code>
      * and its children. The average is &quot;weighted&quot; by giving this
-     * <code>Nodemapper</code>'s size and the average size of its children
-     * equal weight. If this <code>Nodemapper</code> does not have a parent
-     * (i.e., is the root), then its size is excluded from the calculation.
+     * <code>Nodemapper</code>'s size and the average size of its children equal
+     * weight. If this <code>Nodemapper</code> does not have a parent (i.e., is
+     * the root), then its size is excluded from the calculation.
      * 
      * @return the sizes of this <code>Nodemapper</code> and all its children.
      */

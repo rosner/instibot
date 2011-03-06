@@ -151,8 +151,25 @@ public class AIMLReader extends DefaultHandler2
              * We don't want to parse the template into some big memory structure, since it may never be used. So we
              * just reconstitute the XML text for later processing.
              */
-            this.templateBuffer.append(SAX.renderStartTag(elementName, attributes, !uri
-                    .equals(this._defaultNamespaceURI), uri));
+            StringBuilder stringBuilder = new StringBuilder();
+            int attributesLength = attributes.getLength();
+            stringBuilder.append("<" + elementName + " " + uri + " ");
+            for (int attributesIndex = 0; attributesIndex < attributesLength; attributesIndex++) {
+		stringBuilder.append(attributes.getQName(attributesIndex));
+		stringBuilder.append("=\"");
+		stringBuilder.append(attributes.getValue(attributesIndex));
+		stringBuilder.append("\"");
+
+	    }
+            stringBuilder.append(">");
+            String renderedHead = stringBuilder.toString();
+            this.templateBuffer.append(renderedHead);
+//            System.out.println(stringBuilder.toString());
+            
+            
+//            String renderStartTag = SAX.renderStartTag(elementName, attributes, !uri.equals(this._defaultNamespaceURI), uri);
+//            System.out.println(renderStartTag);
+//            this.templateBuffer.append(renderStartTag);
         }
         else if (elementName.equals("topic"))
         {

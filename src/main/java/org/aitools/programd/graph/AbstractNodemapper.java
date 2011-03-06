@@ -12,13 +12,12 @@ package org.aitools.programd.graph;
 import java.util.LinkedHashMap;
 
 /**
- * This is an abstract memory-based <code>Nodemapper</code> containing all the things that
- * are common to the various optimization strategies.
+ * This is an abstract memory-based <code>Nodemapper</code> containing all the
+ * things that are common to the various optimization strategies.
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
-abstract public class AbstractNodemaster implements Nodemapper
-{
+abstract public class AbstractNodemapper implements Nodemapper {
     /**
      * The hidden hashmap where some (or all) mappings may be stored, depending
      * upon optimization strategies.
@@ -37,51 +36,45 @@ abstract public class AbstractNodemaster implements Nodemapper
     /**
      * @see org.aitools.programd.graph.Nodemapper#setParent(org.aitools.programd.graph.Nodemapper)
      */
-    public void setParent(Nodemapper parent)
-    {
-        this._parent = parent;
+    public void setParent(Nodemapper parent) {
+	this._parent = parent;
     }
 
     /**
      * @see org.aitools.programd.graph.Nodemapper#getParent()
      */
-    public Nodemapper getParent()
-    {
-        return this._parent;
+    public Nodemapper getParent() {
+	return this._parent;
     }
 
     /**
      * @see org.aitools.programd.graph.Nodemapper#getHeight()
      */
-    public int getHeight()
-    {
-        return this._height;
+    public int getHeight() {
+	return this._height;
     }
 
     /**
      * @see org.aitools.programd.graph.Nodemapper#setTop()
      */
-    public void setTop()
-    {
-        this.fillInHeight(0);
+    public void setTop() {
+	this.fillInHeight(0);
     }
 
     /**
      * Sets the <code>height</code> of this <code>AbstractNodemaster</code> to
-     * <code>height</code>, and calls <code>fillInHeight()</code> on its
-     * parent (if not null) with a height <code>height + 1</code>.
+     * <code>height</code>, and calls <code>fillInHeight()</code> on its parent
+     * (if not null) with a height <code>height + 1</code>.
      * 
-     * @param height the height for this node
+     * @param height
+     *            the height for this node
      */
-    protected void fillInHeight(int height)
-    {
-        if (this._height > height)
-        {
-            this._height = height;
-        }
-        if (this._parent != null)
-        {
-            ((AbstractNodemaster) this._parent).fillInHeight(height + 1);
-        }
+    protected void fillInHeight(int height) {
+	if (this._height > height) {
+	    this._height = height;
+	}
+	if (this._parent != null) {
+	    ((AbstractNodemapper) this._parent).fillInHeight(height + 1);
+	}
     }
 }

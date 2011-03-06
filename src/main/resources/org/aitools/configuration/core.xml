@@ -49,7 +49,7 @@ GENERAL NOTES
     <entry key="programd.aiml-schema.namespace-uri">http://alicebot.org/2001/AIML-1.0.1</entry>
     
     <!--The bot configuration startup file. [URL: bots.xml]-->
-    <entry key="programd.startup-file-path">bots.xml</entry>
+    <entry key="programd.startup-file-path">classpath:org/aitools/configuration/bots.xml</entry>
     <!--<entry key="programd.startup-file-path">../resources/testing/multibot/bots.xml</entry>-->
     
     <!--What to do when a category is loaded whose pattern:that:topic path
@@ -104,7 +104,7 @@ GENERAL NOTES
     <!--Where to write gossip entries.                       [URL: /var/log/programd/gossip.txt]
         * Gossip entries will be written like this:
           <li>the gossip</li>.-->
-    <entry key="programd.gossip.path">/Users/jeckyll/Documents/studium/dialogsysteme/gossip.txt</entry>
+    <entry key="programd.gossip.path">file:///Users/jeckyll/Documents/studium/dialogsysteme/gossip.txt</entry>
     
     <!--The string to send when first connecting to the bot. [String: CONNECT]
          * If this value is empty or not defined, no value

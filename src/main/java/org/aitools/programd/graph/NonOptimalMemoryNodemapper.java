@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
-public class NonOptimalMemoryNodemapper extends AbstractNodemaster
+public class NonOptimalMemoryNodemapper extends AbstractNodemapper
 {
     /**
      * @see org.aitools.programd.graph.Nodemapper#put(java.lang.String, java.lang.Object)
@@ -130,9 +130,9 @@ public class NonOptimalMemoryNodemapper extends AbstractNodemaster
         {
             for (Object object : this.hidden.values())
             {
-                if (object instanceof AbstractNodemaster)
+                if (object instanceof AbstractNodemapper)
                 {
-                    total += ((AbstractNodemaster) object).getAverageSize();
+                    total += ((AbstractNodemapper) object).getAverageSize();
                 }
             }
         }

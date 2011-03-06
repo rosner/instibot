@@ -12,41 +12,42 @@ package org.aitools.programd.predicates;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
 /**
  * A map of predicate names to values.
- *
+ * 
  * @author <a href="mailto:noel@aitools.org">Noel Bush</a>
  */
-public class PredicateMap extends HashMap<String, PredicateValue>
-{
+public class PredicateMap extends HashMap<String, PredicateValue> {
+    private static final long serialVersionUID = 8068090655285267322L;
+
     /**
      * Creates a new <code>PredicateMap</code>.
      */
-    public PredicateMap()
-    {
-        super();
+    public PredicateMap() {
+	super();
     }
 
     /**
      * Puts a single-valued predicate into the map.
      * 
-     * @param name the predicate name
-     * @param value the predicate value
+     * @param name
+     *            the predicate name
+     * @param value
+     *            the predicate value
      */
-    public void put(String name, String value)
-    {
-        put(name, new PredicateValue(value));
+    public void put(String name, String value) {
+	put(name, new PredicateValue(value));
     }
 
     /**
      * Puts a multi-valued predicate into the map.
      * 
-     * @param name the predicate name
-     * @param values the predicate values
+     * @param name
+     *            the predicate name
+     * @param values
+     *            the predicate values
      */
-    public void put(String name, ArrayList<String> values)
-    {
-        put(name, new PredicateValue(values));
+    public void put(String name, ArrayList<String> values) {
+	put(name, new PredicateValue(values));
     }
 }

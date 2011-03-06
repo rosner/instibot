@@ -50,7 +50,7 @@
 			<version>${spring.version}</version>
 		</dependency>
 
-        <!-- JAXRS stuff for RESTful API -->
+		<!-- JAXRS stuff for RESTful API -->
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-server</artifactId>
@@ -91,7 +91,25 @@
 			<version>3.2.1</version>
 		</dependency>
 
-        <!-- needed -->
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<version>1.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>jaxen</groupId>
+			<artifactId>jaxen</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>0.9.3</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>gnu-getopt</groupId>
 			<artifactId>getopt</artifactId>
@@ -134,14 +152,6 @@
 			<artifactId>jdom</artifactId>
 			<version>1.1</version>
 		</dependency>
-
-		<dependency>
-			<groupId>xml-resolver</groupId>
-			<artifactId>xml-resolver</artifactId>
-			<version>1.2</version>
-		</dependency>
-
-
 	</dependencies>
 
 	<build>

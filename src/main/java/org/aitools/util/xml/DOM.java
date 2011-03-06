@@ -22,18 +22,12 @@ package org.aitools.util.xml;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.aitools.util.runtime.DeveloperError;
 import org.apache.log4j.Logger;
-import org.apache.xml.resolver.Catalog;
-import org.apache.xml.resolver.Resolver;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.jdom.output.DOMOutputter;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import com.sun.org.apache.xml.internal.security.utils.resolver.ResourceResolver;
+import org.xml.sax.ext.DefaultHandler2;
 
 /**
  * Utilities specific to the standard W3C DOM.
@@ -58,9 +52,24 @@ public class DOM
     public static Document getDocument(URL location, Logger logger)
     {
 	
-        ResourceResolver resolver = new ResourceResolver(new Catalog());
-        Resolver entityResolver = new Resolver(resolver);
-        resolver.setEntityResolver(entityResolver);
+	try {
+	    SAXBuilder saxBuilder = new SAXBuilder();
+	    saxBuilder.setValidation(true);
+	    saxBuilder.setEntityResolver(new DefaultHandler2());
+	    org.jdom.Document document = saxBuilder.build(location.toExternalForm());
+	    DOMOutputter domOutputter = new DOMOutputter();
+	    return domOutputter.output(document);
+	} catch (JDOMException e) {
+	    e.printStackTrace();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+	return null;
+	
+	/*
+//        ResourceResolver resolver = new ResourceResolver(new Catalog());
+//        Resolver entityResolver = new Resolver(resolver);
+//        resolver.setEntityResolver(entityResolver);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -72,7 +81,7 @@ public class DOM
             builder = factory.newDocumentBuilder();
             builder.setErrorHandler(new SimpleSAXErrorHandler(logger));
            
-            builder.setEntityResolver(entityResolver);
+            builder.setEntityResolver(new DefaultHandler2());
         }
         catch (ParserConfigurationException e)
         {
@@ -96,6 +105,7 @@ public class DOM
         }
         return document;
         
+        */
         /*LSParser parser = ((DOMImplementationLS) builder.getDOMImplementation().getFeature("LS","3.0")).createLSParser(DOMImplementationLS.MODE_SYNCHRONOUS, XMLConstants.W3C_XML_SCHEMA_NS_URI);
         
         DOMConfiguration config = parser.getDomConfig();
