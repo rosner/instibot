@@ -7,6 +7,8 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.potsdam.instibot.rest.UserCredentials;
+
 public class PandoraBotsWrapperTest {
 
     private static final String NOT_IMPLEMENTED = "Not implemented";

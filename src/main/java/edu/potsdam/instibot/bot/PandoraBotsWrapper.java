@@ -11,6 +11,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
 
+import edu.potsdam.instibot.rest.UserCredentials;
+
 public class PandoraBotsWrapper {
 
     private static final Logger LOGGER = Logger.getLogger(PandoraBotsWrapper.class);

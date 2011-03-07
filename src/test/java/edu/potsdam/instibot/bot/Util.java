@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import edu.potsdam.instibot.rest.UserCredentials;
+
 public class Util {
 
     public static UserCredentials getCredentialsFromString(String inputString) {

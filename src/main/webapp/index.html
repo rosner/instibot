@@ -7,13 +7,13 @@
 	
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
-		var apiBase = 'http://localhost:8080/api/bot/respond'
+		var apiBase = 'http://localhost:8080/api/bot/respond/'
 		
 		$('#say_it').click(function() {
 			var user_input_text = $("#user_input").val();
 			    
 		
-			$.get(apiBase, "foo", function(data, textStatus, xhr) {
+			$.get(apiBase + 'f5d922d97e345aa1', "", function(data, textStatus, xhr) {
 				alert(textStatus);
 			});
 			

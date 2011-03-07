@@ -13,23 +13,23 @@ import javax.ws.rs.core.Response.Status;
 import org.springframework.stereotype.Component;
 
 import edu.potsdam.instibot.bot.PandoraBotsWrapper;
-import edu.potsdam.instibot.bot.UserCredentials;
 
 @Component
 @Path("bot/respond")
 public class BotResource {
 
-     @Resource
+    @Resource
     protected PandoraBotsWrapper pandoraBotsWrapper;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserCredentials(String botId) {
+    @Path("{bot_id}")
+    public UserCredentials getUserCredentials(@PathParam("bot_id") String botId) {
 	UserCredentials userCredentials = pandoraBotsWrapper.getNewUserCredentials(botId);
 	if (userCredentials == null) {
 	    throw new WebApplicationException(Response.status(Status.SERVICE_UNAVAILABLE).build());
 	}
-	return Response.status(Status.OK).
+	return userCredentials;
     }
     
     @GET
