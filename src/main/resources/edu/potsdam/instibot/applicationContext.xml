@@ -12,29 +12,13 @@
 
 	<util:properties id="propertyBean" location="classpath:edu/potsdam/instibot/application.properties" />
 
+	<bean id="pandoraBotsWrapper" class="edu.potsdam.instibot.bot.PandoraBotsWrapper"/>
+
 	<context:component-scan base-package="edu.potsdam.instibot.rest" />
 
 	<!-- Insert the bot handling bean here and that's all <bean id="apiService" class="edu.potsdam.instibot.api.Test" /> -->
 	<context:annotation-config />
 
-	<bean id="sampleBot" class="edu.potsdam.instibot.bot.Bot">
-		<constructor-arg name="botID" value="SampleBot" />
-		<property name="enabled" value="true" />
-		<property name="sentenceSplitters">
-			<list>
-				<value>.</value>
-				<value>!</value>
-				<value>\\?</value>
-				<value>;</value>
-			</list>
-		</property>
-		<property name="aimlResources">
-		  <list>
-		      <value>classpath:org/aitools/bots/ALICE.aiml</value>
-		  </list>
-		</property>
-		<!-- <properties href="properties.xml"/> <predicates href="predicates.xml"/> <substitutions href="substitutions.xml"/> 
-			<listeners href="listeners.xml"/> -->
-	</bean>
+	<!-- http://pandorabots.com/pandora/talk?botid=b7545a4fde3477c2 -->
 
 </beans>

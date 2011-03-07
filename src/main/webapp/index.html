@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The instibot html test page</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+	
+<script type="text/javascript" charset="utf-8">
+	$(document).ready(function() {
+		var apiBase = 'http://localhost:8080/api/bot/respond'
+		
+		$('#say_it').click(function() {
+			var user_input_text = $("#user_input").val();
+			    
+		
+			$.get(apiBase, "foo", function(data, textStatus, xhr) {
+				alert(textStatus);
+			});
+			
+			
+		});
+	});	
+</script>                                            
+
+<style type="text/css" media="screen">
+	body {
+		font-family: Helvetica, Arial, sans-serif;
+	}
+	
+	#user_input {
+		width:200px;
+	}
+</style>                                     
+
+</head>
+<body>
+<h1>instibot - your personal cl related chat bot</h1>
+
+<form accept-charset="utf-8">
+	<p>
+		<input type="text" value="Please speak to me" id="user_input" />
+		<input type="button" value="Continue &rarr;" id="say_it" />
+	</p>
+</form>
+</body>
+</html>
