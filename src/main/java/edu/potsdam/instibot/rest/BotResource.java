@@ -35,12 +35,12 @@ public class BotResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("respond/{bot_id}/{user_id}/{user_input}")
-    public String respond(
+    public BotResponse respond(
 	    @PathParam("bot_id") String botId,
 	    @PathParam("user_id") String userId, 
 	    @PathParam("user_input") String userInput) {	
 	BotResponse botResponse = pandoraBotsWrapper.getBotResponse(botId, userId, userInput);
 	
-	return "\"" + userInput +  "\"";
+	return botResponse;
     }
 }

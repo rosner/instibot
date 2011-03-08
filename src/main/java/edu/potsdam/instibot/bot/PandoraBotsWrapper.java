@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -123,8 +122,19 @@ public class PandoraBotsWrapper {
     
     private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(String htmlString) {
 	List<QuestionAnswerPair> resultList = new ArrayList<QuestionAnswerPair>();
+
+	Pattern pattern = Pattern.compile("Human\\:.*?\\s(.+?)\\<.*?[\\w+?]\\:.*?\\s(.+?)\\<");
+	Matcher matcher = pattern.matcher(htmlString);
 	
-	
+	while(matcher.find()) {
+		String human = matcher.group(1);
+		String bot = matcher.group(2);
+		
+		QuestionAnswerPair pair = new QuestionAnswerPair();
+		pair.setQuestion(human);
+		pair.setAnswer(bot);
+		resultList.add(pair);
+	}
 	
 	return resultList;
     }
