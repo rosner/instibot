@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,16 +92,15 @@ public class PandoraBotsWrapper {
 		    try {
 			htmlString = getHtmlFromInputStream(entityInputStream, encoding);
 			entityInputStream.close();
-			System.out.println(htmlString);
+			List<QuestionAnswerPair> extractedPairs = extractQuestionAnswerPairsFromHtml(htmlString);
+			botResponse = new BotResponse();
+			botResponse.setResponses(extractedPairs);
 		    } catch (IOException e) {
 			e.printStackTrace();
 		    } 		    
 		}
 		
-	    }
-	    
-	    
-	    
+	    }  
 	    
 	}
 	
@@ -119,5 +119,13 @@ public class PandoraBotsWrapper {
 	bufferedReader.close();
 	inputStreamReader.close();
 	return stringBuilder.toString();
+    }
+    
+    private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(String htmlString) {
+	List<QuestionAnswerPair> resultList = new ArrayList<QuestionAnswerPair>();
+	
+	
+	
+	return resultList;
     }
 }
