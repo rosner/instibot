@@ -26,7 +26,8 @@ import edu.potsdam.instibot.rest.UserCredentials;
 
 public class PandoraBotsWrapper {
 
-    private static final Logger LOGGER = Logger.getLogger(PandoraBotsWrapper.class);
+    private static final Logger LOGGER = Logger
+	    .getLogger(PandoraBotsWrapper.class);
 
     private static final String PANDORA_BOTS_BASE_URL = "http://pandorabots.com/pandora/talk";
 
@@ -46,69 +47,81 @@ public class PandoraBotsWrapper {
     }
 
     public UserCredentials getNewUserCredentials(String botId) {
-	WebResource botResource = pandoraBotsBaseResource.queryParam("botid", botId);
+	WebResource botResource = pandoraBotsBaseResource.queryParam("botid",
+		botId);
 	ClientResponse response = botResource.post(ClientResponse.class);
 	UserCredentials userCredentials = null;
-	LOGGER.debug(String.format("Requested pandora bot with id %s under the following url %s", botId, response));
+	LOGGER.debug(String.format(
+		"Requested pandora bot with id %s under the following url %s",
+		botId, response));
 	// extract the new user id from the raw http header because the pandora
 	// server is an old lisp based beasty
 	if (response.getClientResponseStatus() == Status.OK) {
 	    MultivaluedMap<String, String> headers = response.getHeaders();
 	    List<String> cookieList = headers.get(HTTP_HEADER_COOKIE_KEY);
 	    if (cookieList.size() > 0) {
-		userCredentials = Util.getCredentialsFromString(cookieList.get(0));
+		userCredentials = Util.getCredentialsFromString(cookieList
+			.get(0));
 	    }
 	}
-	
+
 	return userCredentials;
     }
-    
-    public BotResponse getBotResponse(String botId, String userId, String userInput) {
+
+    public BotResponse getBotResponse(String botId, String userId,
+	    String userInput) {
 	MultivaluedMapImpl formData = new MultivaluedMapImpl();
 	formData.add(COOKIES_KEY_USER_ID, userId);
 	formData.add("input", userInput);
-	
+
 	MultivaluedMapImpl queryParams = new MultivaluedMapImpl();
 	queryParams.add("botid", botId);
 	// this is specifically for alice. Change this or remove this later
-	queryParams.add("skin", "custom_input");
-	WebResource botResource = pandoraBotsBaseResource.queryParams(queryParams);
-	
-	ClientResponse response = botResource.type(MediaType.APPLICATION_FORM_URLENCODED).post(ClientResponse.class, formData);
-	
+	// queryParams.add("skin", "custom_input");
+	WebResource botResource = pandoraBotsBaseResource
+		.queryParams(queryParams);
+
+	ClientResponse response = botResource.type(
+		MediaType.APPLICATION_FORM_URLENCODED).post(
+		ClientResponse.class, formData);
+
 	BotResponse botResponse = null;
 	if (response.getClientResponseStatus() == Status.OK) {
-	    MultivaluedMap<String,String> headers = response.getHeaders();
+	    MultivaluedMap<String, String> headers = response.getHeaders();
 	    List<String> contentTypeValues = headers.get("Content-Type");
 	    for (String currentValue : contentTypeValues) {
-		// get the encoding out of the header. 
-		Pattern encodingPattern = Pattern.compile("charset=(.*);?", Pattern.DOTALL);
+		// get the encoding out of the header.
+		Pattern encodingPattern = Pattern.compile("charset=(.*);?",
+			Pattern.DOTALL);
 		Matcher matcher = encodingPattern.matcher(currentValue);
 		if (matcher.find()) {
 		    String encoding = matcher.group(1);
-		    InputStream entityInputStream = response.getEntityInputStream();
+		    InputStream entityInputStream = response
+			    .getEntityInputStream();
 		    String htmlString;
 		    try {
-			htmlString = getHtmlFromInputStream(entityInputStream, encoding);
+			htmlString = getHtmlFromInputStream(entityInputStream,
+				encoding);
 			entityInputStream.close();
 			List<QuestionAnswerPair> extractedPairs = extractQuestionAnswerPairsFromHtml(htmlString);
 			botResponse = new BotResponse();
 			botResponse.setResponses(extractedPairs);
 		    } catch (IOException e) {
 			e.printStackTrace();
-		    } 		    
+		    }
 		}
-		
-	    }  
-	    
+
+	    }
+
 	}
-	
+
 	return botResponse;
     }
 
-    
-    private String getHtmlFromInputStream(InputStream inputStream, String encoding) throws IOException {
-	InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding);
+    private String getHtmlFromInputStream(InputStream inputStream,
+	    String encoding) throws IOException {
+	InputStreamReader inputStreamReader = new InputStreamReader(
+		inputStream, encoding);
 	BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 	StringBuilder stringBuilder = new StringBuilder();
 	String line;
@@ -119,23 +132,23 @@ public class PandoraBotsWrapper {
 	inputStreamReader.close();
 	return stringBuilder.toString();
     }
-    
-    private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(String htmlString) {
+
+    private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(
+	    String htmlString) {
 	List<QuestionAnswerPair> resultList = new ArrayList<QuestionAnswerPair>();
 
-	Pattern pattern = Pattern.compile("Human\\:.*?\\s(.+?)\\<.*?[\\w+?]\\:.*?\\s(.+?)\\<");
+	Pattern pattern = Pattern.compile("Human\\:.*?\\s(.+?)\\<.*?[\\w+?]\\:.*?\\s(.+?)\\<",
+		Pattern.CASE_INSENSITIVE);
 	Matcher matcher = pattern.matcher(htmlString);
-	
-	while(matcher.find()) {
-		String human = matcher.group(1);
-		String bot = matcher.group(2);
-		
-		QuestionAnswerPair pair = new QuestionAnswerPair();
-		pair.setQuestion(human);
-		pair.setAnswer(bot);
-		resultList.add(pair);
+
+	while (matcher.find()) {
+	    String human = matcher.group(1).trim();
+	    String bot = matcher.group(2).trim();
+
+	    QuestionAnswerPair pair = new QuestionAnswerPair(human, bot);
+	    resultList.add(pair);
 	}
-	
+
 	return resultList;
     }
 }

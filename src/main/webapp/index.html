@@ -28,7 +28,12 @@
 				alert("Request a user id first!");
 			} else {                                                                       			
 				$.get(apiBase + 'respond/' + defaultBotId + '/' + currentUserId + '/' + user_input_text, "", function(data) {
-						alert(data);
+						var responseList = data.responses;   
+						console.log(responseList);
+						$.each(responseList, function(index, theElement) {
+							
+						  $("#dialog").append('<li><b>Human:</b>' + theElement.question + '</li>');
+						});
 					});
       }
 		});
@@ -59,5 +64,10 @@
 		<input type="button" value="Continue &rarr;" id="say_it" />
 	</p>
 </form>
+
+<h3>Dialog</h3>
+<ol id="dialog">
+</ol>
+
 </body>
 </html>

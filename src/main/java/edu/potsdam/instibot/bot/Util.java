@@ -11,7 +11,7 @@ import edu.potsdam.instibot.rest.UserCredentials;
 public class Util {
 
     // Wed, 16 Mar 2011 20:52:42 GMT
-    public static final DateTimeFormatter formatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").withLocale(Locale.ENGLISH);
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").withLocale(Locale.ENGLISH);
     
     public static UserCredentials getCredentialsFromString(String inputString) {
 
@@ -30,7 +30,7 @@ public class Util {
 		}
 		if (cookieValue.startsWith(PandoraBotsWrapper.COOKIES_KEY_EXP_DATE)) {
 		    
-		    DateTime parseDateTime = formatter.parseDateTime(actualValue);
+		    DateTime parseDateTime = DATE_FORMATTER.parseDateTime(actualValue);
 		    String expDateAsString = parseDateTime.toString();
 		    userCredentials.setExpirationDate(expDateAsString);
 		}
