@@ -133,8 +133,9 @@ public class PandoraBotsWrapper {
 	return stringBuilder.toString();
     }
 
-    private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(
-	    String htmlString) {
+    private List<QuestionAnswerPair> extractQuestionAnswerPairsFromHtml(String htmlString) {
+	LOGGER.debug(htmlString);
+	
 	List<QuestionAnswerPair> resultList = new ArrayList<QuestionAnswerPair>();
 
 	Pattern pattern = Pattern.compile("Human\\:.*?\\s(.+?)\\<.*?[\\w+?]\\:.*?\\s(.+?)\\<",

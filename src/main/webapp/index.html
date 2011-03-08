@@ -14,12 +14,10 @@
 		var currentUserId;
 		       
 		$("#request_user_id").click(function() {
-			
 			$.get(apiBase + 'user_credentials/' + defaultBotId, '', function(data) {
 				$("#user_id").text(' ' + data.user_id);
 				currentUserId = data.user_id;
 			});
-			
 		});
 		
 		$('#say_it').click(function() {
@@ -28,11 +26,11 @@
 				alert("Request a user id first!");
 			} else {                                                                       			
 				$.get(apiBase + 'respond/' + defaultBotId + '/' + currentUserId + '/' + user_input_text, "", function(data) {
-						var responseList = data.responses;   
-						console.log(responseList);
-						$.each(responseList, function(index, theElement) {
-							
-						  $("#dialog").append('<li><b>Human:</b>' + theElement.question + '</li>');
+						$("#dialog").html('');						
+						$.each(data.responses, function(index, theElement) {
+
+						  $("#dialog").append('<li><b>Human:</b>' + theElement.question + ' <b>Bot:</b>' + theElement.answer + '</li>');
+								
 						});
 					});
       }
