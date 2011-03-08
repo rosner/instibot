@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import edu.potsdam.instibot.bot.PandoraBotsWrapper;
 
 @Component
-@Path("bot/respond")
+@Path("bot/")
 public class BotResource {
 
     @Resource
@@ -23,7 +23,7 @@ public class BotResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{bot_id}")
+    @Path("user_credentials/{bot_id}")
     public UserCredentials getUserCredentials(@PathParam("bot_id") String botId) {
 	UserCredentials userCredentials = pandoraBotsWrapper.getNewUserCredentials(botId);
 	if (userCredentials == null) {
@@ -33,45 +33,14 @@ public class BotResource {
     }
     
     @GET
-//    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.TEXT_PLAIN)
-    @Path("{user_id}/{user_input}")
-    public String respond(@PathParam("user_id") String userId, @PathParam("user_input") String userInput) {
-	if (userId.isEmpty()) {
-	    return "Hello new User";
-	} else {
-	    
-	 return "Hello old User";   
-	}
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("respond/{bot_id}/{user_id}/{user_input}")
+    public String respond(
+	    @PathParam("bot_id") String botId,
+	    @PathParam("user_id") String userId, 
+	    @PathParam("user_input") String userInput) {	
+	BotResponse botResponse = pandoraBotsWrapper.getBotResponse(botId, userId, userInput);
+	
+	return "\"" + userInput +  "\"";
     }
-    /*
-     * @GET
-     * 
-     * @Produces("application/xml") public Addresses getAllAddresses() {
-     * Addresses addresses = new Addresses();
-     * addresses.getKeys().addAll(addressService.getAddressKeys()); return
-     * addresses; }
-     * 
-     * @GET
-     * 
-     * @Path("{key}")
-     * 
-     * @Produces("application/xml") public Address getAddress(@PathParam("key")
-     * String key) { return addressService.findAddressByKey(key); }
-     * 
-     * @DELETE
-     * 
-     * @Path("{key}") public void deleteAddress(@PathParam("key") String key) {
-     * addressService.deleteAddressByKey(key); }
-     * 
-     * @PUT
-     * 
-     * @Consumes("application/xml") public void updateAddress(Address address) {
-     * addressService.insertAddress(address); }
-     * 
-     * @POST
-     * 
-     * @Consumes("application/xml") public void insertNewAddress(Address
-     * address) { addressService.insertAddress(address); }
-     */
 }

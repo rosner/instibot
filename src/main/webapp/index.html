@@ -6,18 +6,31 @@
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 	
 <script type="text/javascript" charset="utf-8">
-	$(document).ready(function() {
-		var apiBase = 'http://localhost:8080/api/bot/respond/'
+	$(document).ready(function() {         
+		var defaultBotId = 'f5d922d97e345aa1';           
+		
+		var apiBase = 'http://localhost:8080/api/bot/';
+		
+		var currentUserId;
+		       
+		$("#request_user_id").click(function() {
+			
+			$.get(apiBase + 'user_credentials/' + defaultBotId, '', function(data) {
+				$("#user_id").text(' ' + data.user_id);
+				currentUserId = data.user_id;
+			});
+			
+		});
 		
 		$('#say_it').click(function() {
 			var user_input_text = $("#user_input").val();
-			    
-		
-			$.get(apiBase + 'f5d922d97e345aa1', "", function(data, textStatus, xhr) {
-				alert(textStatus);
-			});
-			
-			
+			if (currentUserId == undefined) {
+				alert("Request a user id first!");
+			} else {                                                                       			
+				$.get(apiBase + 'respond/' + defaultBotId + '/' + currentUserId + '/' + user_input_text, "", function(data) {
+						alert(data);
+					});
+      }
 		});
 	});	
 </script>                                            
@@ -36,7 +49,11 @@
 <body>
 <h1>instibot - your personal cl related chat bot</h1>
 
-<form accept-charset="utf-8">
+<form accept-charset="utf-8">      
+	<p>
+		<input type="button" value="request new user id" id="request_user_id"/>
+		UserId:<span id="user_id"></span>
+	</p>
 	<p>
 		<input type="text" value="Please speak to me" id="user_input" />
 		<input type="button" value="Continue &rarr;" id="say_it" />
