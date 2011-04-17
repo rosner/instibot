@@ -39,7 +39,7 @@ public class BotResource {
 	    @PathParam("bot_id") String botId,
 	    @PathParam("user_id") String userId, 
 	    @PathParam("user_input") String userInput) {	
-	BotResponse botResponse = pandoraBotsWrapper.getBotResponse(botId, userId, userInput);
+	BotResponse botResponse = pandoraBotsWrapper.getBotResponse(botId, userId, userInput.trim());
 	
 	return botResponse;
     }
