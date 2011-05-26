@@ -36,4 +36,19 @@ public class QuestionAnswerPair {
     public void setAnswer(String answer) {
         this.answer = answer;
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+	if (obj != null && obj instanceof QuestionAnswerPair) {
+	    QuestionAnswerPair questionAnswerPair = (QuestionAnswerPair) obj;
+	    return question.equals(questionAnswerPair.question) && answer.equals(questionAnswerPair.answer);
+	} else {
+	    return false;
+	}
+    }
+    
+    @Override
+    public String toString() {
+        return "Q: " + question + " A: " + answer;
+    }
 }
