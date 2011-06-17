@@ -1,5 +1,7 @@
 package edu.potsdam.instibot;
 
+import java.io.IOException;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
@@ -10,7 +12,7 @@ public class JettyStarter {
 
     private Server server;
 
-    public JettyStarter(int port) {
+    public JettyStarter(int port) throws IOException {
 
 	server = new Server();
 	SocketConnector connector = new SocketConnector();
@@ -25,12 +27,24 @@ public class JettyStarter {
 	connector.setPort(port);
 	server.setConnectors(new Connector[] { connector });
 
-	WebAppContext webContext = new WebAppContext();
+	WebAppContext webContext = new WebAppContext(getBaseUrl(), "/");
 	webContext.setServer(server);
-	webContext.setContextPath("/");
-	webContext.setWar("src/main/webapp");
 	webContext.setMaxFormContentSize(3000000);
 	server.setHandler(webContext);
+    }
+
+    private String getBaseUrl() {
+	/*
+	if (JettyStarter.class.getClassLoader().getResource(".") == null) {
+	    // Running from jar
+	    URL webInfUrl = JettyStarter.class.getClassLoader().getResource("WEB-INF");
+	    String webInfUrlString = webInfUrl.toExternalForm();
+	    return webInfUrlString.substring(0, webInfUrlString.lastIndexOf('/') + 1);
+	} else {
+	*/
+	    // Running from Eclipse
+	    return "src/main/webapp";
+	/*} */
     }
 
     public void start() {
