@@ -9,7 +9,8 @@
 	$(document).ready(function() {         
 		var defaultBotId = 'fe64a45a9e346bff';           
 		
-		var apiBase = 'http://localhost:58080/api/bot/';
+		var hostname = window.location.hostname;
+		var apiBase = 'http://' + window.location.hostname + ':' + window.location.port + '/api/bot/';
 		
 		var currentUserId;
 		       
